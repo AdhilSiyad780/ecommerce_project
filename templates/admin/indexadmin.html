@@ -1,0 +1,223 @@
+{% extends 'admin/headeradmin.html' %}
+
+{% load static %}
+{% block content %}
+    <style>
+        /* General Menu Styles */
+.menu-aside {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    width: 250px; /* Adjust as needed */
+}
+
+/* Main Menu Items */
+.menu-item {
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+
+/* Menu Links */
+.menu-link {
+    display: block;
+    padding: 12px 20px;
+    background: #f8f8f8;
+    color: #333;
+    text-decoration: none;
+    font-size: 16px;
+    border-bottom: 1px solid #ddd;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    cursor: pointer;
+}
+
+.menu-link:hover,
+.menu-link:focus {
+    background-color: #e0e0e0;
+    color: #000;
+}
+
+/* Submenu Styles - Initial Hidden State */
+.submenu {
+    display: none;
+    position: absolute;
+    top: 100%; /* Position below the parent menu */
+    left: 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    z-index: 1000;
+    list-style: none;
+    min-width: 200px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-20px); /* Start slightly above */
+    padding: 0;
+    transition: opacity 0.5s ease, transform 0.5s ease, visibility 0s linear 0.3s; /* Smooth transition */
+}
+
+/* Submenu Items */
+.submenu a {
+    display: block;
+    padding: 10px 15px;
+    color: #555;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.submenu a:hover,
+.submenu a:focus {
+    background-color: #f0f0f0;
+    color: #000;
+}
+
+/* Hover/Focus to Display Submenu */
+.menu-item:hover > .submenu,
+.menu-item:focus-within > .submenu {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0); /* Smoothly slide in */
+    transition: opacity 0.5s ease, transform 0.3s ease, visibility 0s linear 0s; /* Transition timing */
+}
+
+/* For Nested Submenus */
+.submenu .menu-item {
+    position: relative;
+}
+
+/* Nested Submenu Styles */
+.submenu .submenu {
+    top: 0;
+    left: 100%; /* Nested submenus open to the right */
+    transform: translateX(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s linear 0.3s;
+}
+
+/* Show nested submenu */
+.submenu .menu-item:hover > .submenu,
+.submenu .menu-item:focus-within > .submenu {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0); /* Smoothly slide in */
+}
+
+/* Optional: Adding a nice arrow icon */
+.menu-link::after {
+    content: " ▼";
+    font-size: 12px;
+    margin-left: 8px;
+    transition: transform 0.3s ease;
+}
+
+.menu-item:hover > .menu-link::after {
+    transform: rotate(180deg); /* Rotate the arrow when hovered */
+}
+
+    </style>
+   
+    <section class="content-main">
+        <div class="content-header">
+          <div>
+            <h2 class="content-title card-title">Dashboard</h2>
+            <p>Whole data about your business here</p>
+          </div>
+         
+        </div>
+        <div class="row">
+          <div class="col-lg-3">
+              <div class="card card-body mb-4">
+                  <article class="icontext">
+                      <span class="icon icon-sm rounded-circle bg-primary-light">
+                          <i class="text-primary material-icons md-monetization_on"></i>
+                      </span>
+                      <div class="text">
+                          <h6 class="mb-1 card-title">Total Sales</h6>
+                          <span>${{ total_sales|floatformat:2 }}</span>
+                          <span class="text-sm">Total revenue from all orders</span>
+                      </div>
+                  </article>
+              </div>
+          </div>
+          <div class="col-lg-3">
+              <div class="card card-body mb-4">
+                  <article class="icontext">
+                      <span class="icon icon-sm rounded-circle bg-success-light">
+                          <i class="text-success material-icons md-local_shipping"></i>
+                      </span>
+                      <div class="text">
+                          <h6 class="mb-1 card-title">Total Orders</h6>
+                          <span>{{ total_orders }}</span>
+                          <span class="text-sm">All time order count</span>
+                      </div>
+                  </article>
+              </div>
+          </div>
+          <div class="col-lg-3">
+            <div class="card card-body mb-4">
+                <article class="icontext">
+                    <span class="icon icon-sm rounded-circle bg-success-light">
+                        <i class="text-success material-icons md-local_shipping"></i>
+                    </span>
+                    <div class="text">
+                        <h6 class="mb-1 card-title">Total User</h6>
+                        <span>{{ total_users }}</span>
+                        <span class="text-sm">All time User count</span>
+                    </div>
+                </article>
+            </div>
+        </div>
+          <div class="col-lg-3">
+              <div class="card card-body mb-4">
+                  <article class="icontext">
+                      <span class="icon icon-sm rounded-circle bg-warning-light">
+                          <i class="text-warning material-icons md-qr_code"></i>
+                      </span>
+                      <div class="text">
+                          <h6 class="mb-1 card-title">Total Discounts</h6>
+                          <span>${{ total_discount|floatformat:2 }}</span>
+                          <span class="text-sm">Total discounts given</span>
+                      </div>
+                  </article>
+              </div>
+          </div>
+      </div>
+      
+       
+        <div class="row">
+            <div class="col-xl-8 col-lg-12">
+              <div class="card mb-4">
+                <article class="card-body">
+                  <h5 class="card-title">Sale statistics</h5>
+                  <canvas id="myChart" height="120px"></canvas>
+                </article>
+              </div>
+              <div class="row">
+                <div class="col-lg-5">
+                  <div class="card mb-4">
+                    
+                  </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card card-body mb-4">
+                <article class="icontext">
+                    <div class="text">
+                        <h6 class="mb-1 card-title">Max-Selling Product</h6>
+                        <span>{{ max_selling_product.product__name }}</span>
+                        <span class="text-sm">Quantity Sold: {{ max_selling_product.total_quantity }}</span>
+                    </div>
+                </article>
+            </div>
+        </div>
+        </div>
+    
+         
+       
+      </section>
+      <!-- content-main end// -->
+     {% endblock %}

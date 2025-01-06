@@ -1,0 +1,498 @@
+{% extends 'header.html' %}
+{% load static  %}
+
+{% block content %}
+<style>
+  .new__container {
+  position: relative;
+}
+
+.swiper-wrapper {
+  display: flex;
+}
+
+.swiper-slide {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.swiper-button-prev,
+.swiper-button-next {
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  padding: 0.5rem;
+  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+.swiper-button-prev {
+  left: 10px;
+}
+
+.swiper-button-next {
+  right: 10px;
+}
+
+.swiper-pagination {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.swiper-pagination-bullet {
+  background: #007bff;
+  opacity: 0.8;
+  width: 12px;
+  height: 12px;
+}
+
+.swiper-pagination-bullet-active {
+  background:  hsl(176, 88%, 27%);
+  opacity: 1;
+}
+/* Container layout for categories */
+.categories__container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem; /* Space between items */
+  justify-content: center; /* Centers the content horizontally */
+  margin-top: 2rem; /* Adds space at the top */
+}
+
+.category__item {
+  background-color: #fff; /* White background for each category item */
+  border-radius: 20px; /* Rounded corners */
+  overflow: hidden; /* Ensures the image does not overflow */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover transition */
+  text-align: center; /* Centers text below the image */
+  cursor: pointer; /* Pointer cursor for interactivity */
+  flex: 1 1 calc(25% - 1.5rem); /* 4 items per row, with space between */
+  max-width: calc(25% - 1.5rem); /* Ensures no overflow */
+}
+
+.category__item:hover {
+  transform: translateY(-5px); /* Slight lift effect on hover */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15); /* Enhanced shadow for hover state */
+}
+
+.category__img {
+  width: 100%; /* Ensures the image takes full width of the item */
+  height: 200px; /* Fixed height to ensure uniformity */
+  object-fit: cover; /* Ensures the image covers the area without distortion */
+  border-radius: 20px; /* Rounded corners for images */
+  transition: transform 0.3s ease; /* Smooth zoom-in effect */
+}
+
+.category__item:hover .category__img {
+  transform: scale(1.05); /* Subtle zoom-in effect when hovering over the category item */
+}
+
+.category__title {
+  font-size: 1.2rem; /* Larger title text for better readability */
+  font-weight: bold; /* Makes the title more prominent */
+  margin-top: 1rem; /* Space between image and title */
+  color: #333; /* Dark text color */
+  transition: color 0.3s ease; /* Smooth color transition on hover */
+}
+
+.category__item:hover .category__title {
+  color: #007bff; /* Change title color on hover */
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .category__item {
+    flex: 1 1 calc(50% - 1.5rem); /* 2 items per row for tablets */
+  }
+
+  .category__img {
+    height: 180px; /* Slightly smaller image size for tablets */
+  }
+
+  .category__title {
+    font-size: 1rem; /* Adjust title size for smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .category__item {
+    flex: 1 1 100%; /* 1 item per row on mobile */
+  }
+
+  .category__img {
+    height: 150px; /* Smaller image size for mobile devices */
+  }
+
+  .category__title {
+    font-size: 0.9rem; /* Slightly smaller title on mobile */
+  }
+}
+
+
+</style>
+    <!--=============== MAIN ===============-->
+    <main class="main">
+      <!--=============== HOME ===============-->
+      <section class="home section--lg">
+        <div class="home__container container grid">
+          <div class="home__content">
+            <span class="home__subtitle">Hot Promotions</span>
+            <h1 class="home__title">
+              Fashion Trending <span>Great Collection</span>
+            </h1>
+            <p class="home__description">
+              Save more with coupons & up tp 20% off
+            </p>
+            <a href="shop.html" class="btn">Shop Now</a>
+          </div>
+          <img src="{% static 'user/img/home-img.png' %}" class="home__img" alt="hats" />
+        </div>
+      </section>
+
+      <!--=============== CATEGORIES ===============-->
+      <section class="categories container section">
+        <h3 class="section__title"><span>Popular</span> Categories</h3>
+        <div class="categories__container swiper">
+          <div class="swiper-wrapper">
+            {% if item %}
+            {% for val in item %}
+           
+            <a href="shop.html" class="category__item swiper-slide">
+              <img
+                src="{{val.image.url}}"
+                alt=""
+                class="category__img"
+              />
+              <h3 class="category__title">{{val.name }}</h3>
+            </a>
+            {% endfor %}
+            {%  endif %}
+          </div>
+
+          <div class="swiper-button-prev">
+            <i class="fi fi-rs-angle-left"></i>
+          </div>
+          <div class="swiper-button-next">
+            <i class="fi fi-rs-angle-right"></i>
+          </div>
+        </div>
+      </section>
+    
+
+      <!--=============== PRODUCTS ===============-->
+      <section class="products container section">
+        <div class="tab__btns">
+          <span class="tab__btn active-tab" data-target="#featured"
+            >Featured</span
+          >
+          <span class="tab__btn" data-target="#popular">Popular</span>
+          <span class="tab__btn" data-target="#new-added">New Added</span>
+        </div>
+
+        <div class="tab__items">
+          <div class="tab__item active-tab" content id="featured">
+            <div class="products__container grid">
+             {% if product6  %}
+             {% for val in product6  %}
+              <div class="product__item">
+                <div class="product__banner">
+                  <a href="{% url 'product_details' id=val.id %}" class="product__images">
+                    <img
+                      src="{{ val.image1.url }}"
+                      alt=""
+                      class="product__img default"
+                    />
+                    <img
+                      src="{{ val.image2.url }}"
+                      alt=""
+                      class="product__img hover"
+                    />
+                  </a>
+                  <div class="product__actions">
+                    <a href="#" class="action__btn" aria-label="Quick View">
+                      <i class="fi fi-rs-eye"></i>
+                    </a>
+                    <a
+                      href="#"
+                      class="action__btn"
+                      aria-label="Add to Wishlist"
+                    >
+                      <i class="fi fi-rs-heart"></i>
+                    </a>
+                    <a href="#" class="action__btn" aria-label="Compare">
+                      <i class="fi fi-rs-shuffle"></i>
+                    </a>
+                  </div>
+                </div>
+                <div class="product__content">
+                  <span class="product__category">{{ val.name }}</span>
+                  <a href="details.html">
+                    <h3 class="product__title">Colorful Pattern Shirts</h3>
+                  </a>
+                  <div class="product__rating">
+                    <i class="fi fi-rs-star"></i>
+                    <i class="fi fi-rs-star"></i>
+                    <i class="fi fi-rs-star"></i>
+                    <i class="fi fi-rs-star"></i>
+                    <i class="fi fi-rs-star"></i>
+                  </div>
+                  <div class="product__price flex">
+                    <span class="new__price">₹{{ val.price}}</span>
+                  </div>
+                  <a
+                    href="#"
+                    class="action__btn cart__btn"
+                    aria-label="Add To Cart"
+                  >
+                    <i class="fi fi-rs-shopping-bag-add"></i>
+                  </a>
+                </div>
+              </div>
+              {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!--=============== DEALS ===============-->
+      <section class="deals section">
+        <div class="deals__container container grid">
+          <div class="deals__item">
+            <div class="deals__group">
+              <h3 class="deals__brand">Deals of the Day</h3>
+              <span class="deals__category">Limited quantities</span>
+            </div>
+            <h4 class="deals__title">Summer Collection New Modern Design</h4>
+            <div class="deals__price flex">
+              <span class="new__price">₹139.00</span>
+              <span class="old__price">₹160.99</span>
+            </div>
+            <div class="deals__group">
+              <p class="deals__countdown-text">Hurry Up! Offer Ends In:</p>
+              <div class="countdown">
+                <div class="countdown__amount">
+                  <p class="countdown__period">02</p>
+                  <span class="unit">Days</span>
+                </div>
+                <div class="countdown__amount">
+                  <p class="countdown__period">22</p>
+                  <span class="unit">Hours</span>
+                </div>
+                <div class="countdown__amount">
+                  <p class="countdown__period">57</p>
+                  <span class="unit">Mins</span>
+                </div>
+                <div class="countdown__amount">
+                  <p class="countdown__period">28</p>
+                  <span class="unit">Sec</span>
+                </div>
+              </div>
+            </div>
+            <div class="deals__btn">
+              <a href="details.html" class="btn btn--md">Shop Now</a>
+            </div>
+          </div>
+          <div class="deals__item">
+            <div class="deals__group">
+              <h3 class="deals__brand">Women Clothing</h3>
+              <span class="deals__category">Shirts & Bag</span>
+            </div>
+            <h4 class="deals__title">Try Something new on vacation</h4>
+            <div class="deals__price flex">
+              <span class="new__price">₹178.00</span>
+              <span class="old__price">₹256.99</span>
+            </div>
+            <div class="deals__group">
+              <p class="deals__countdown-text">Hurry Up! Offer Ends In:</p>
+              <div class="countdown">
+                <div class="countdown__amount">
+                  <p class="countdown__period">02</p>
+                  <span class="unit">Days</span>
+                </div>
+                <div class="countdown__amount">
+                  <p class="countdown__period">22</p>
+                  <span class="unit">Hours</span>
+                </div>
+                <div class="countdown__amount">
+                  <p class="countdown__period">57</p>
+                  <span class="unit">Mins</span>
+                </div>
+                <div class="countdown__amount">
+                  <p class="countdown__period">28</p>
+                  <span class="unit">Sec</span>
+                </div>
+              </div>
+            </div>
+            <div class="deals__btn">
+              <a href="details.html" class="btn btn--md">Shop Now</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+     <!--=============== NEW ARRIVALS ===============-->
+     <section class="new__arrivals container section">
+      <h3 class="section__title"><span>New</span> Arrivals</h3>
+      <div class="new__container swiper">
+        <!-- Swiper Wrapper -->
+        <div class="swiper-wrapper">
+          {% if newarrivals %}
+          {% for val in newarrivals %}
+          <!-- Product Item -->
+          <div class="product__item swiper-slide">
+            <div class="product__banner">
+              <a href="{% url 'product_details' id=val.id %}" class="product__images">
+                <img src="{{ val.image1.url }}" alt="Default Image" class="product__img default" />
+                <img src="{{ val.image1.url }}" alt="Hover Image" class="product__img hover" />
+              </a>
+              <div class="product__badge light-green">-22%</div>
+              <div class="product__actions">
+                <a href="#" class="action__btn" aria-label="Quick View">
+                  <i class="fi fi-rs-eye"></i>
+                </a>
+                <a href="#" class="action__btn" aria-label="Add to Wishlist">
+                  <i class="fi fi-rs-heart"></i>
+                </a>
+                <a href="#" class="action__btn" aria-label="Compare">
+                  <i class="fi fi-rs-shuffle"></i>
+                </a>
+              </div>
+            </div>
+            <div class="product__content">
+              <span class="product__category">{{ val.name }}</span>
+              <a href="{% url 'product_details' id=val.id %}">
+                <h3 class="product__title">{{ val.description }}</h3>
+              </a>
+              <div class="product__rating">
+                <i class="fi fi-rs-star"></i>
+                <i class="fi fi-rs-star"></i>
+                <i class="fi fi-rs-star"></i>
+                <i class="fi fi-rs-star"></i>
+                <i class="fi fi-rs-star"></i>
+              </div>
+              <div class="product__price">
+                <span class="new__price">₹{{ val.price }}</span>
+              </div>
+              <a href="#" class="cart__btn action__btn" aria-label="Add To Cart">
+                <i class="fi fi-rs-shopping-bag-add"></i>
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+          {% endif %}
+        </div>
+        <!-- Swiper Navigation -->
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-button-next"></div>
+        <!-- Swiper Pagination -->
+        <div class="swiper-pagination"></div>
+      </div>
+    </section>
+    
+
+      <!--=============== SHOWCASE ===============-->
+      <section class="showcase section">
+        <div class="showcase__container container grid">
+          <div class="showcase__wrapper">
+            <h3 class="section__title">Hot Releases</h3>
+            {% if newarrivals %}
+            {% for val in newarrivals %}
+            <div>
+            <div class="showcase__item">
+              <a href="{% url 'product_details' id=val.id %}" class="showcase__img-box">
+                <img
+                  src="{{ val.image1.url }}"
+                  alt=""
+                  class="showcase__img"
+                />
+              </a>
+              <div class="showcase__content">
+                <a href="details.html">
+                  <h4 class="showcase__title">
+                    {{ val.name }}
+                  </h4>
+                </a>
+                <div class="showcase__price flex">
+                  <span class="new__price">₹238.85</span>
+                  <span class="old__price">₹245.8</span>
+                </div>
+              </div>
+            </div>
+          </div>
+         {% endfor %}
+          {% endif %}
+           
+             
+            </div>
+          </div>
+      </section>
+
+      <!--=============== NEWSLETTER ===============-->
+      <section class="newsletter section home__newsletter">
+        <div class="newsletter__container container grid">
+          <h3 class="newsletter__title flex">
+            <img
+              src="./assets/img/icon-email.svg"
+              alt=""
+              class="newsletter__icon"
+            />
+            Sign in to Newsletter
+          </h3>
+          <p class="newsletter__description">
+            ...and receive $25 coupon for first shopping.
+          </p>
+          <form action="" class="newsletter__form">
+            <input
+              type="text"
+              placeholder="Enter Your Email"
+              class="newsletter__input"
+            />
+            <button type="submit" class="newsletter__btn">Subscribe</button>
+          </form>
+        </div>
+      </section>
+    </main>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const swiper = new Swiper(".swiper", {
+          slidesPerView: 1,
+          spaceBetween: 20,
+          loop: true,
+          navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
+          },
+          pagination: {
+            el: ".swiper-pagination",
+            clickable: true,
+          },
+          breakpoints: {
+            640: {
+              slidesPerView: 2,
+              spaceBetween: 20,
+            },
+            768: {
+              slidesPerView: 3,
+              spaceBetween: 30,
+            },
+            1024: {
+              slidesPerView: 4,
+              spaceBetween: 40,
+            },
+          },
+        });
+      });
+    </script>
+    
+   {% endblock %}

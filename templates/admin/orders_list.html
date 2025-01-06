@@ -1,0 +1,172 @@
+{% extends 'admin/headeradmin.html' %}
+{% block content %}
+            <section class="content-main">
+                <div class="content-header">
+                    <div>
+                        <h2 class="content-title card-title">Order List</h2>
+                        <p>Lorem ipsum dolor sit amet.</p>
+                    </div>
+                    
+                </div>
+                <div class="card mb-4">
+                    <header class="card-header">
+                        <div class="card">
+                            <div class="card-header p-3">
+                                <!-- First Row - Search -->
+                                <div class="row mb-3">
+                                    <div class="col-12">
+                                        <form method="get" class="d-flex w-100">
+                                            <input 
+                                                type="text" 
+                                                name="search" 
+                                                placeholder="Search order ID, name, or email" 
+                                                class="form-control me-2 flex-grow-1" 
+                                                value="{{ search_query }}"
+                                            />
+                                            <button type="submit" class="btn btn-primary" style="min-width: 100px;">Search</button>
+                                        </form>
+                                    </div>
+                                </div>
+                        
+                                <!-- Second Row - Filters and Downloads -->
+                                <div class="row">
+                                    <div class="col-12 d-flex justify-content-end">
+                                        <div class="d-flex gap-3 align-items-center flex-wrap">
+                                            <!-- Date Filters -->
+                                            <form id="filter-form" method="get" class="d-flex gap-2">
+                                                <input 
+                                                    type="date" 
+                                                    name="start_date" 
+                                                    id="start_date" 
+                                                    class="form-control" 
+                                                    value="{{ start_date }}"
+                                                />
+                                                <input 
+                                                    type="date" 
+                                                    name="end_date" 
+                                                    id="end_date" 
+                                                    class="form-control" 
+                                                    value="{{ end_date }}"
+                                                />
+                                                <select name="range" id="range" class="form-control">
+                                                    <option value="daily">Daily</option>
+                                                    <option value="weekly">Weekly</option>
+                                                    <option value="yearly">Yearly</option>
+                                                </select>
+                                            </form>
+                                        
+                                            <!-- Download Buttons -->
+                                            <div class="d-flex gap-2">
+                                                <a href="#" id="download-excel" class="btn btn-success">Download Excel</a>
+                                                <a href="#" id="download-pdf" class="btn btn-danger">Download PDF</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                            
+                    </header>
+                    
+                    <!-- card-header end// -->
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#ID</th>
+                                        <th scope="col">Name</th>
+                                        <th scope="col">Email</th>
+                                        <th scope="col">Total</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Date</th>
+                                        <th scope="col" class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if items %}
+                                    {% for item in items %}
+                                   
+                                    
+                                    <tr>
+                                        <td>{{ item.id }}</td>
+                                        <td><b>{{item.user.username}}</b></td>
+                                        <td>{{ item.user.email|default:"No email available" }}</td>
+
+                                        <td>${{item.total_price}}</td>
+                                        <td>
+                                            <span 
+                                              class="badge rounded-pill {% if item.status == 'canceled' %}alert-danger{% elif item.status == 'pending' %}alert-warning {% else %}alert-success{% endif %}">
+                                              {{ item.status }}
+                                            </span>
+                                          </td>
+                                       <td>{{item.created_at}}</td>
+                                        <td class="text-end">
+                                            <a href="{% url 'admin_order_details' id=item.id %}" class="btn btn-md rounded font-sm">Detail</a>
+                                          
+                                            <!-- dropdown //end -->
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- table-responsive //end -->
+                    </div>
+                    <!-- card-body end// -->
+                </div>
+                <!-- card end// -->
+                <div class="pagination-area mt-15 mb-50">
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination justify-content-start">
+                            {% if items.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ items.previous_page_number }}&search={{ search_query }}">Previous</a>
+                            </li>
+                            {% endif %}
+                            {% for num in items.paginator.page_range %}
+                            <li class="page-item {% if items.number == num %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}&search={{ search_query }}">{{ num }}</a>
+                            </li>
+                            {% endfor %}
+                            {% if items.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ items.next_page_number }}&search={{ search_query }}">Next</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                
+            </section>
+            <!-- content-main end// -->
+        
+<script>
+    // Function to update the download links with selected filters
+    function updateDownloadLinks() {
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+        const range = document.getElementById('range').value;
+
+        // Construct query parameters
+        const queryParams = new URLSearchParams({
+            start_date: startDate,
+            end_date: endDate,
+            range: range,
+        }).toString();
+
+        // Update the href attributes of the download buttons
+        document.getElementById('download-excel').href = `{% url 'download_sales_excel' %}?` + queryParams;
+        document.getElementById('download-pdf').href = `{% url 'download_sales_pdf' %}?` + queryParams;
+    }
+
+    // Attach event listeners to inputs to update links dynamically
+    document.getElementById('start_date').addEventListener('change', updateDownloadLinks);
+    document.getElementById('end_date').addEventListener('change', updateDownloadLinks);
+    document.getElementById('range').addEventListener('change', updateDownloadLinks);
+
+    // Initialize the links on page load
+    document.addEventListener('DOMContentLoaded', updateDownloadLinks);
+</script>
+  {% endblock %}

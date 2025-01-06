@@ -1,0 +1,150 @@
+{% extends 'admin/headeradmin.html' %}
+{% load static %}
+{% block content %}
+{% if messages %}
+    <script>
+        {% for message in messages %}
+            {% if message.tags == 'error' %}
+                Swal.fire({
+                    icon: 'error',  
+                    title: 'Oops...',
+                    text: '{{ message }}',
+                    confirmButtonText: 'OK'
+                });
+            {% elif message.tags == 'success' %}
+                Swal.fire({
+                    icon: 'success',  
+                    title: 'Success!',
+                    text: '{{ message }}',
+                    confirmButtonText: 'OK'
+                });
+            {% endif %}
+        {% endfor %}
+    </script>
+{% endif %}
+
+      <section class="content-main">
+        <div class="content-header">
+          <div>
+            <h2 class="content-title card-title">Coupons</h2>
+            <p>Add or edit a Coupons</p>
+          </div>
+          <div>
+            <input
+              type="text"
+              placeholder="Search Categories"
+              class="form-control bg-white"
+            />
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-3">
+                <form enctype="multipart/form-data" method="POST" action="{% url 'create_coupons' %}">
+                  {% csrf_token %}
+                  <div class="mb-4">
+                      <label for="product_name" class="form-label">Coupon Code</label>
+                      <input type="text" name="code" placeholder="Type here" class="form-control" id=""  />
+                  </div>
+                  <div class="mb-4">
+                      <label for="prcategoryoduct_slug" class="form-label">Discount</label>
+                      <input type="text" name="discount" placeholder="Type here" class="form-control" id="" />
+                  </div>
+                  <div class="mb-4">
+                    <label for="prcategoryoduct_slug" class="form-label">Min_purchase</label>
+                    <input type="text" name="MIN-purchase" placeholder="Type here" class="form-control" id="" />
+                </div>
+                {% if messages %}
+                <div class="alert alert-danger">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %} 
+                <div class="mb-4">
+                  <label for="prcategoryoduct_slug" class="form-label">Valid From</label>
+                  <input type="date" name="validfrom" placeholder="Type here" class="form-control" id="" />
+              </div>
+              <div class="mb-4">
+                <label for="prcategoryoduct_slug" class="form-label">Valid To</label>
+                <input type="date" name="validto" placeholder="Type here" class="form-control" id="" />
+            </div>
+            <div class="mb-2">
+              <label for="prcategoryoduct_slug" class="form-label"> Limit </label>
+              <input type="text" name="limit" placeholder="Type here" class="form-control" id="" />
+          </div>
+                  <div class="d-grid">
+                   
+                      <button type="submit" class="btn btn-primary">Create Coupon</button>
+                  </div>
+              </form>
+              
+                
+              </div>
+              <div class="col-md-9">
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead>
+                      <tr>
+                        
+                        <th>ID</th>
+                        <th>Code</th>
+                        <th>Discount</th>
+                        <th>Minimum Purchase</th>
+                        <th>Valid-From</th>
+                        <th>Valid-To</th>
+                        <th>Limit</th>
+                        <th class="text-end">Action</th>
+                      </tr>
+                    </thead>
+                    {% if coupons %}
+                    {% for val in coupons %}
+                    <tbody>
+                   
+                  
+                      <tr>
+                        
+                        <td>{{val.id}}</td>
+                        <td><b>{{val.code}}</b></td>
+                        <td>{{val.discount_value}}</td>
+
+                        <td>{{val.min_purchase_amount}}</td>
+                        <td>{{val.valid_from}}</td>
+                        <td>{{val.valid_to}}</td>
+                        <th>{{val.usage_limit}}</th>
+
+                        <td class="text-end">
+                         
+                            <div class="action-buttons">
+                              <a href="{% url 'edit_coupon' id=val.id %}">
+                                <button class="btn btn-primary">Edit</button>
+                              </a>
+                             
+                            </div>
+                  
+                          <!-- dropdown //end -->
+                        </td>
+                      </tr>
+                   
+                    </tbody>
+                    {% endfor  %}
+                    {% endif %}
+                  </table>
+                </div>
+              </div>
+               
+            
+              <!-- .col// -->
+            </div>
+            <!-- .row // -->
+          </div>
+          <!-- card body .// -->
+        </div>
+        <!-- card .// -->
+      </section>
+      <!-- content-main end// -->
+
+    
+    
+  {% endblock %}

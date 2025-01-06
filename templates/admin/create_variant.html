@@ -1,0 +1,80 @@
+{% extends 'admin/headeradmin.html' %}
+
+{% load static %}
+{% block content %}
+
+            <section class="content-main">
+                <div class="row">
+                    <div class="col-9">
+                        <div class="content-header">
+                            <h2 class="content-title">Add New Variant</h2>
+                           
+                        </div>
+                    </div>
+                    <!-- ------------------------------------------------------- -->
+                    <div class="col-lg-12">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h4>Basic</h4>
+                            </div>
+                            <div class="card-body">
+                                <form method="POST" enctype="multipart/form-data"  action="{% url 'create_variant' product_id=product_id.id  %}" >
+                                    {% csrf_token %}
+                                  
+                                   
+                                    <div class="row">
+                                         {% if product_id %}
+                                         <input  value="{{ product_id.id }}" type = 'hidden' />
+                                         {% endif %}
+
+
+                                       
+                                        <div class="col-lg-4">
+                                            <div class="mb-4">
+                                                <label class="form-label">Stock </label>
+                                                <input placeholder="" type="text" name="stock" class="form-control" />
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <label class="form-label">Size</label>
+                                            <select class="form-control" name="size" id="size" required>
+                                                <option value="S">S</option>
+                                                <option value="M">M</option>
+                                                <option value="L">L</option>
+                                                <option value="XL">XL</option>
+                                                <option value="XXL">XXL</option>
+                                                <option value="26">26</option>
+                                                <option value="28">28</option>
+                                                <option value="30">30</option>
+                                                <option value="32">32</option>
+                                                <option value="34">34</option>
+                                                <option value="36">36</option>
+                                                <option value="38">38</option>
+                                                <option value="40">40</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                   
+                                    {% if error %}
+                                    <p style="color: red;">{{ error }}</p>
+                                    {% endif %}
+                                    <div style="text-align: center;">
+                                        <button type="submit" class="btn btn-primary">Submit</button>
+                                    </div>
+                                    
+                                    
+                                   
+                                </form>
+                            </div>
+                        </div>
+                        <!-- card end// -->
+                       
+                     
+                       
+                        <!-- card end// -->
+                    </div>
+                </div>
+            </section>
+            <!-- content-main end// -->
+      
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'admin/headeradmin.html' %}
+
+{% load static %}
+{% block content %}
+            <section class="content-main">
+                <div class="content-header d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="content-title card-title">Variant List</h2>
+                    {% if product_id %}
+                    <a href="{% url 'create_variant' product_id=product_id %}" class="btn btn-primary btn-sm rounded">Create New</a>
+                    
+                    {% endif %}
+                </div>
+            
+                <div class="card mb-4">
+                    <header class="card-header">
+                        <div class="row text-center align-items-center">
+                            <div class="col-1">
+                                <h6>ID</h6>
+                            </div>
+                            <div class="col-2">
+                                <h6>Size</h6>
+                            </div>
+                            <div class="col-2">
+                                <h6>Stock</h6>
+                            </div>
+                            <div class="col-2">
+                                <h6>Product Name</h6>
+                            </div>
+                            <div class="col-2">
+                                <h6>Product ID</h6>
+                            </div>
+                            <div class="col-2">
+                                <h6>Actions</h6>
+                            </div>
+                        </div>
+                    </header>
+            
+                    <div class="card-body">
+                        {% if item %}
+                        {% for val in item %}
+                        <article class="itemlist">
+                            <div class="row text-center align-items-center">
+                                <div class="col-1">
+                                    <h6 class="mb-0">{{ val.id }}</h6>
+                                </div>
+                                <div class="col-2">
+                                    <h6 class="mb-0">{{ val.size }}</h6>
+                                </div>
+                                <div class="col-2">
+                                    <span>{{ val.stock }}</span>
+                                </div>
+                                <div class="col-2">
+                                    <span>{{ val.product }}</span>
+                                </div>
+                                <div class="col-2">
+                                    <span>{{ val.product.id }}</span>
+                                </div>
+                                <div class="col-3 d-flex justify-content-around">
+                                   
+                                    <a href="{% url 'edit_variant' variant=val.id %}" class="btn btn-xs font-xs btn-primary rounded" style="padding: 4px 8px;">
+                                        <i class="material-icons" style="font-size: 12px;">Edit Variant</i>
+                                    </a>
+                                </div>
+                            </div>
+                        </article>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            
+                <div class="pagination-area mt-4">
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination justify-content-start">
+                            <li class="page-item active"><a class="page-link" href="#">01</a></li>
+                            <li class="page-item"><a class="page-link" href="#">02</a></li>
+                            <li class="page-item"><a class="page-link" href="#">03</a></li>
+                            <li class="page-item"><a class="page-link dot" href="#">...</a></li>
+                            <li class="page-item"><a class="page-link" href="#">16</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#"><i class="material-icons md-chevron_right"></i></a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </section>
+            
+           
+          {% endblock %}

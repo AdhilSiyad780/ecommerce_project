@@ -1,0 +1,114 @@
+{% extends 'header.html' %}
+
+{% block content %}
+
+<main class="main">
+    <!--=============== BREADCRUMB ===============-->
+    <section class="breadcrumb">
+      <ul class="breadcrumb__list flex container">
+        <li><a href="index.html" class="breadcrumb__link">Home</a></li>
+        <li><span class="breadcrumb__link"></span>></li>
+        <li><span class="breadcrumb__link">Shop</span></li>
+        <li><span class="breadcrumb__link"></span>></li>
+        <li><span class="breadcrumb__link">Wishlist</span></li>
+      </ul>
+    </section>
+
+    <!--=============== WISHLIST ===============-->
+    <section class="wishlist section--lg container">
+      <div class="table__container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Size</th>
+              <th>Stock Status</th>
+              <th>Action</th>
+              <th>Rename</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+          {% if items %}
+          {% for entry in items %}
+            <tr>
+              <td>
+                <img
+                  src="{{ entry.item.product.image1.url  }}"
+                  alt=""
+                  class="table__img"
+                />
+              </td>
+              <td>
+                <h3 class="table__title">
+                  {{ entry.item.product.name }}
+                </h3>
+                <p class="table__description">
+                  {{ entry.item.product.description }}
+                </p>
+              </td>
+              <td>
+                <span class="table__price">${{ entry.item.product.price }}</span>
+              </td>
+              <td>
+                <span class="table__price">{{ entry.item.size }}</span>
+              </td>
+              {% if entry.stock == 0 %}
+              
+              <td>
+                <span style="color: red;"  class="table__price">Out of stock</span>
+              </td>
+              {% elif entry.stock < 3 %}
+
+              <td>
+                <span style="color: red;"  class="table__price">Only {{entry.stock}} left</span>
+              </td>
+              {% else  %}
+              <td>
+                <span style="color: green;"  class="table__price">In stock</span>
+              </td>
+
+              {% endif %}
+             
+
+              <td><a href="{% url 'wishlist_to_cart' id=entry.item.id %}" class="btn btn--sm">Add to Cart</a></td>
+              <td><a href="{% url 'delete_wishlist' id=entry.item.id %}"><i class="fi fi-rs-trash table__trash"></i></a></td>
+             
+            </tr>
+
+            {% endfor %}
+            {%  endif %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!--=============== NEWSLETTER ===============-->
+    <section class="newsletter section">
+      <div class="newsletter__container container grid">
+        <h3 class="newsletter__title flex">
+          <img
+            src="./assets/img/icon-email.svg"
+            alt=""
+            class="newsletter__icon"
+          />
+          Sign in to Newsletter
+        </h3>
+        <p class="newsletter__description">
+          ...and receive $25 coupon for first shopping.
+        </p>
+        <form action="" class="newsletter__form">
+          <input
+            type="text"
+            placeholder="Enter Your Email"
+            class="newsletter__input"
+          />
+          <button type="submit" class="newsletter__btn">Subscribe</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+{% endblock %}

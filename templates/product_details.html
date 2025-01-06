@@ -1,0 +1,558 @@
+{% extends 'header.html' %}
+{% load static %}
+
+
+{% block content %}
+<!-- Add jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Add ElevateZoom -->
+<script src="https://cdn.rawgit.com/elevateweb/elevatezoom/master/jquery.elevateZoom-3.0.8.min.js"></script>
+
+<style>
+
+/* Container for reviews section, already centered */
+.tabcontent {
+  display: block;  /* Ensure the content is visible by default */
+  width: 90%;  /* Adjust width for better aesthetics */
+  max-width: 1200px;  /* Set a max width */
+  margin: 0 auto;  /* Center the content */
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Reviews container (optional for visual enhancement) */
+.reviews__container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive grid */
+  gap: 20px;
+  padding: 20px 0;
+}
+
+/* Individual review card */
+.review__single {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Style for the reviewer name and avatar */
+.review__title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.review__img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 10px;
+  object-fit: cover;
+}
+
+/* Style for the review data */
+.review__data {
+  margin-top: 10px;
+}
+
+/* Rating style */
+.review__rating i {
+  color: gold;
+  margin-right: 3px;
+}
+
+/* Review description and date */
+.review__description {
+  font-size: 14px;
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+.review__date {
+  font-size: 12px;
+  color: #888;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .review__single {
+    padding: 15px;
+  }
+}
+/* Container for the size selection */
+.size-selector {
+  margin-top: 20px;
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Label for the size dropdown */
+.size-selector__label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-left: 4px;
+}
+
+/* Styling for the select dropdown */
+.size-selector__select {
+  width: 100%;
+  padding: 12px 15px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+/* Styling for the focus and hover states of the select dropdown */
+.size-selector__select:focus,
+.size-selector__select:hover {
+  border-color: #007bff;
+  box-shadow: 0 0 4px rgba(0, 123, 255, 0.2);
+}
+
+/* Sold Out Message Styling */
+.sold-out {
+  color: red;
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 10px;
+  text-align: center;
+}
+/* Ensure the container is positioned correctly */
+.product-image-container {
+  position: relative;
+  display: inline-block;
+}
+
+.details__img {
+  width: 100%;  /* Adjust according to your needs */
+  cursor: zoom-in;  /* Change cursor to indicate zoom effect */
+}
+
+</style>
+
+  <!--=============== MAIN ===============-->
+    <main class="main">
+      <!--=============== BREADCRUMB ===============-->
+      <section class="breadcrumb">
+        <ul class="breadcrumb__list flex container">
+          <li><a href="index.html" class="breadcrumb__link">Home</a></li>
+          <li><span class="breadcrumb__link"></span>></li>
+          <li><span class="breadcrumb__link">Fashion</span></li>
+          <li><span class="breadcrumb__link"></span>></li>
+          <li><span class="breadcrumb__link">Henley Shirt</span></li>
+        </ul>
+      </section>
+
+      <!--=============== DETAILS ===============-->
+      <section class="details section--lg">
+        <div class="details__container container grid">
+            {% if alpha %}
+          <div class="details__group">
+            <div class="product-image-container">
+              <!-- Main product image -->
+              <img src="{{ alpha.image1.url }}" alt="Product Image" class="details__img" id="mainImage">
+            </div>
+            
+              
+            <div class="details__small-images grid">
+              <img
+                src="{{ alpha.image2.url }}"
+                alt=""
+                class="details__small-img"
+              />
+              <img
+                src="{{ alpha.image3.url  }}"
+                alt=""
+                class="details__small-img"
+              />
+             
+            </div>
+          </div>
+          <div class="details__group">
+            <h3 class="details__title">{{alpha.name}}</h3>
+            <!-- <p class="details__brand">Brand: <span>adidas</span></p> -->
+            <div class="details__price flex">
+              <!-- <span class="new__price">$116</span> -->
+              <span class="old__price">₹{{alpha.price}}</span>
+              <span class="save__price">₹{{alpha.offer}}</span>
+            </div>
+            <p class="short__description">
+              {{  alpha.description  }}
+            </p>
+            <ul class="products__list">
+              <li class="list__item flex">
+                <i class="fi-rs-crown"></i> 1 Year Al Jazeera Brand Warranty
+              </li>
+              <li class="list__item flex">
+                <i class="fi-rs-refresh"></i> 30 Days Return Policy
+              </li>
+              <li class="list__item flex">
+                <i class="fi-rs-credit-card"></i> Cash on Delivery available
+              </li>
+            </ul>
+           
+            <div class="details__size flex">
+              <span class="details__size-title"></span>
+              <ul class="size__list">
+               
+                {% if size %}
+                <div class="size-selector">
+                  <label for="sizeSelect" class="size-selector__label">Select Size</label>
+                  <select id="sizeSelect" name="size" class="size-selector__select">
+                    <option value="" disabled selected>Select Size</option>
+                    {% for val in size %}
+                      <option value="{{ val.size }}" data-stock="{{ val.stock }}">{{ val.size }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              {% else %}
+                <h5 class="sold-out">Sold Out</h5>
+              {% endif %}
+              
+                </div>
+                
+                <div class="details__action">
+
+                  <!-- Add To Cart Button -->
+                  <a href="#" id="addToCartButton" class="btn btn--sm">Add To Cart</a>
+                
+                  <!-- Wishlist Button -->
+                  <a href="#" id="addToWishlistButton" class="details__action-btn">
+                    <i class="fi fi-rs-heart"></i>
+                  </a>
+                  
+                </div>
+                
+            <ul class="details__meta">
+              <li class="meta__list flex"><span>SKU:</span>FWM15VKT</li>
+              <li class="meta__list flex">
+                <span>Tags:</span>Clothes, Women, Dress
+              </li>
+              <li class="meta__list flex">
+                <!-- Stock Display -->
+                <div id="stockDisplay">
+                    
+                  <p >Stock: <span style="color: mediumturquoise;"  id="stockAmount">Select a size</span></p>
+                </div>
+                                            
+              </li>
+            </ul>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      <!--=============== DETAILS TAB ===============-->
+      
+
+     
+      <section class="products container section--lg">
+        <h3 class="section__title"><span>Related</span> Products</h3>
+        <div class="products__container grid">
+           <!--=============== PRODUCTS ===============-->
+      {% if related %}
+      {% for val in related  %}
+          <div class="product__item">
+            <div class="product__banner">
+              <a href="{% url 'product_details' id=val.id %}" class="product__images">
+                <img
+                  src="{{ val.image1.url  }}"
+                  alt=""
+                  class="product__img default"
+                />
+                <img
+                  src=""
+                  alt=""
+                  class="product__img hover"
+                />
+              </a>
+              <div class="product__actions">
+                <a href="#" class="action__btn" aria-label="Quick View">
+                  <i class="fi fi-rs-eye"></i>
+                </a>
+                <a
+                  href="#"
+                  class="action__btn"
+                  aria-label="Add to Wishlist"
+                >
+                  <i class="fi fi-rs-heart"></i>
+                </a>
+                <a href="#" class="action__btn" aria-label="Compare">
+                  <i class="fi fi-rs-shuffle"></i>
+                </a>
+              </div>
+              <div class="product__badge light-blue">Hot</div>
+            </div>
+            <div class="product__content">
+              <span class="product__category">{{val.name}}</span>
+              <a href="details.html">
+                <h3 class="product__title">{{val.description}}</h3>
+              </a>
+              <div class="product__rating">
+                <i class="fi fi-rs-star"></i>
+                <i class="fi fi-rs-star"></i>
+                <i class="fi fi-rs-star"></i>
+                <i class="fi fi-rs-star"></i>
+                <i class="fi fi-rs-star"></i>
+              </div>
+              <div class="product__price flex">
+                <span class="new__price">${{val.price}}</span>
+              </div>
+              <a
+                href="#"
+                class="action__btn cart__btn"
+                aria-label="Add To Cart"
+              >
+                <i class="fi fi-rs-shopping-bag-add"></i>
+              </a>
+            </div>
+          </div>
+          {% endfor  %}
+          {% endif %}
+        </div>
+      </section>
+      <!--=============== TAB CONTENT ===============-->
+      <div class="tabcontent" id="reviews">
+        <h3 class="section__title">Customer Reviews</h3>  <!-- Heading for the reviews section -->
+        
+        <div class="reviews__container grid">
+          {% if review %}
+            <!-- Loop through reviews if available -->
+            {% for val in review %}
+              <div class="review__single">
+                <div>
+                  <h4 class="review__title">{{ val.user.username }}</h4>  
+                </div>
+                <div class="review__data">
+                  <!-- Rating: Dynamic stars (Optional) -->
+                  <div class="review__rating">
+                    <!-- Example: Add stars dynamically if desired -->
+                    {% for i in 1..5 %}
+                      <i class="fi fi-rs-star {% if i <= val.rating %}active{% endif %}"></i>  <!-- Assuming `val.rating` stores the number of stars -->
+                    {% endfor %}
+                  </div>
+                  
+                  <p class="review__description">
+                    {{ val.review }}
+                  </p>
+                  <span class="review__date">{{ val.created_at }}</span>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <!-- Show this message if no reviews -->
+            <p class="no-reviews-message">No reviews for this product yet.</p>
+          {% endif %}
+        </div>
+      </div>
+      
+
+
+
+      <!--=============== NEWSLETTER ===============-->
+      
+    </main>
+
+    <!--=============== FOOTER ===============-->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+  // Select the main image and the small images
+  const mainImage = document.querySelector(".details__img");
+  const smallImages = document.querySelectorAll(".details__small-img");
+
+  // Add click event listeners to each small image
+  smallImages.forEach((smallImg) => {
+    smallImg.addEventListener("click", function () {
+      // Change the main image's source to the clicked image's source
+      mainImage.src = smallImg.src;
+    });
+  });
+});
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+      // Add an event listener to the dropdown
+      document.getElementById('sizeSelect').addEventListener('change', function(event) {
+        // Get the selected size from the dropdown
+        const selectedOption = event.target.selectedOptions[0];
+        
+        // Get the stock value from the selected option's data attribute
+        const stock = selectedOption.getAttribute('data-stock');
+        
+        // Get the stock display element
+        const stockAmount = document.getElementById('stockAmount');
+        
+        // Update the stock display based on the stock value
+        if (stock < 5 && stock > 0) {
+          stockAmount.textContent = `Only ${stock} left!`;
+        } else if (stock >= 5) {
+          stockAmount.textContent = 'Available';
+        } else {
+          stockAmount.textContent = 'Out of stock';
+        }
+      });
+    </script>
+ <script>
+  document.addEventListener("DOMContentLoaded", function () {
+  const sizeDropdown = document.querySelector("#sizeSelect");
+  const addToCartButton = document.querySelector("#addToCartButton");
+
+  // Ensure productId is passed correctly
+  const productId = "{{ alpha.id }}";
+
+  if (sizeDropdown && addToCartButton) {
+    sizeDropdown.addEventListener("change", function () {
+      const selectedSize = sizeDropdown.value;
+
+      if (selectedSize) {
+        // Debug: Log selected size
+        console.log("Selected Size:", selectedSize);
+
+        // Update the 'href' dynamically
+        const updatedUrl = `{% url 'addcart' id=alpha.id size='size_placeholder' %}`.replace(
+          "size_placeholder",
+          selectedSize
+        );
+
+        console.log("Updated URL:", updatedUrl); // Debug: Log the updated URL
+        addToCartButton.setAttribute("href", updatedUrl);
+      } else {
+        console.log("No size selected."); // Debug: Log when no size is selected
+        addToCartButton.removeAttribute("href");
+      }
+    });
+
+    // Prevent adding to cart if no size is selected
+    addToCartButton.addEventListener("click", function (event) {
+      if (!sizeDropdown.value) {
+        event.preventDefault();
+        alert("Please select a size before adding to the cart.");
+      }
+    });
+  } else {
+    console.error("Size dropdown or Add To Cart button not found!"); // Debug: Error logging
+  }
+});
+
+
+  
+</script>
+{% if messages %}
+<script>
+    {% for message in messages %}
+        {% if message.tags == 'error' %}
+            Swal.fire({
+                icon: 'error',  // Error icon
+                title: 'Oops...',
+                text: '{{ message }}',
+                confirmButtonText: 'OK'
+            });
+        {% elif message.tags == 'success' %}
+            Swal.fire({
+                icon: 'success',  // Success icon
+                title: 'Success!',
+                text: '{{ message }}',
+                confirmButtonText: 'OK'
+            });
+        {% endif %}
+    {% endfor %}
+</script>
+{% endif %}
+
+ <script>
+  $(document).ready(function() {
+  // Apply elevateZoom to the main image
+  $('#mainImage').elevateZoom({
+    zoomType: "window",  // Zoom window effect
+    lensShape: "round",   // Optional: lens shape (round, square)
+    lensSize: 200,        // Optional: size of the zoom lens
+    scrollZoom: true,     // Optional: allow zoom with mouse wheel
+    responsive: true,     // Ensure responsiveness
+    zoomWindowWidth: 400, // Zoom window width
+    zoomWindowHeight: 400, // Zoom window height
+    borderSize: 2,        // Optional: border size of the zoom window
+    borderColour: "#ccc", // Optional: border color of the zoom window
+    zoomLevel: 2          // Optional: set zoom level (2x, 3x, etc.)
+  });
+});
+
+ </script>   
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+  const sizeDropdown = document.querySelector("#sizeSelect");
+  const addToCartButton = document.querySelector("#addToCartButton");
+  const addToWishlistButton = document.querySelector("#addToWishlistButton");
+
+  // Ensure productId is passed correctly
+  const productId = "{{ alpha.id }}";
+
+  if (sizeDropdown && addToCartButton && addToWishlistButton) {
+    sizeDropdown.addEventListener("change", function () {
+      const selectedSize = sizeDropdown.value;
+
+      if (selectedSize) {
+        // Debug: Log selected size
+        console.log("Selected Size:", selectedSize);
+
+        // Update the 'href' for Add to Cart
+        const cartUrl = `{% url 'addcart' id=alpha.id size='size_placeholder' %}`.replace(
+          "size_placeholder",
+          selectedSize
+        );
+        console.log("Updated Cart URL:", cartUrl);
+        addToCartButton.setAttribute("href", cartUrl);
+
+        // Update the 'href' for Add to Wishlist
+        const wishlistUrl = `{% url 'add_wishlist_from_product_details' id=alpha.id size='size_placeholder' %}`.replace(
+          "size_placeholder",
+          selectedSize
+        );
+        console.log("Updated Wishlist URL:", wishlistUrl);
+        addToWishlistButton.setAttribute("href", wishlistUrl);
+      } else {
+        console.log("No size selected."); // Debug: Log when no size is selected
+        addToCartButton.removeAttribute("href");
+        addToWishlistButton.removeAttribute("href");
+      }
+    });
+
+    // Prevent adding to cart if no size is selected
+    addToCartButton.addEventListener("click", function (event) {
+      if (!sizeDropdown.value) {
+        event.preventDefault();
+        alert("Please select a size before adding to the cart.");
+      }
+    });
+
+    // Prevent adding to wishlist if no size is selected
+    addToWishlistButton.addEventListener("click", function (event) {
+      if (!sizeDropdown.value) {
+        event.preventDefault();
+        alert("Please select a size before adding to the wishlist.");
+      }
+    });
+  } else {
+    console.error("Required elements not found!"); // Debug: Error logging
+  }
+});
+
+</script>
+
+    {% endblock %}
+   

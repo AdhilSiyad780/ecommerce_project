@@ -1,0 +1,856 @@
+{%  extends 'header.html'  %}
+
+{% load static %}
+{% block content  %}
+<style>
+  /* General Styles */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f6f9;
+  color: #333;
+  margin: 0;
+}
+
+.tab__header {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #444;
+}
+
+.tab__body {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Table Styles */
+.placed__order-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+
+.placed__order-table th, 
+.placed__order-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.placed__order-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.placed__order-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.placed__order-table td {
+  font-size: 0.9rem;
+}
+
+/* Status Styling */
+.status {
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+.status.pending {
+  color: orange;
+}
+
+.status.canceled {
+  color: red;
+}
+
+.status.delivered {
+  color: green;
+}
+
+.status.default {
+  color: black;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: #fff;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.view__order {
+  background-color: #4e73df;
+}
+
+.view__order:hover {
+  background-color: #224abe;
+}
+
+/* Empty Orders */
+.no-orders {
+  text-align: center;
+  padding: 20px;
+}
+
+.no-orders h2 {
+  font-size: 1.2rem;
+  color: #555;
+}
+
+</style>
+<style>
+  /* Global Styles */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background-color: #f4f6f9;
+  color: #333;
+}
+
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Header */
+.dashboard-header {
+  background: linear-gradient(90deg, #4e73df, #224abe);
+  color: #fff;
+  padding: 20px 0;
+  text-align: center;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+/* Profile Card */
+.profile-card {
+  background: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.profile-header {
+  background: linear-gradient(90deg, hsl(176, 88%, 27%), hsl(176, 88%, 27%));
+  color: #fff;
+  text-align: center;
+  padding: 20px;
+}
+
+.profile-header .profile-icon {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+.profile-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.profile-header .subtitle {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.profile-details {
+  padding: 20px;
+}
+
+.profile-details ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.profile-details li {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.profile-details li:last-child {
+  border-bottom: none;
+}
+
+.profile-actions {
+  padding: 20px;
+  text-align: center;
+  border-top: 1px solid #eee;
+}
+
+.profile-actions .btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin: 0 5px;
+}
+
+.profile-actions .btn-primary {
+  background: #4e73df;
+  color: #fff;
+}
+
+.profile-actions .btn-primary:hover {
+  background:  hsl(176, 88%, 27%);
+}
+
+.profile-actions .btn-danger {
+  background: #e74a3b;
+  color: #fff;
+}
+
+.profile-actions .btn-danger:hover {
+  background: #c0392b;
+}
+
+</style>
+<style>
+  .form__field {
+  display: flex;
+  gap: 10px; /* Space between the inputs */
+  margin-bottom: 15px; /* Spacing between fields */
+}
+
+.form__input {
+  flex: 1; /* Make inputs flexible */
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.form__input--half {
+  width: calc(50% - 5px); /* Half-width inputs with space in-between */
+}
+
+.form__btn {
+  text-align: center;
+}
+/* Modal Styles */
+/* Modal Background */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+/* Modal Content */
+.modal-content {
+    background: #fff;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Header */
+.modal-header {
+    background:  hsl(176, 88%, 27%);
+    color: #fff;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.modal-header .close {
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* Body */
+.modal-body {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+/* Footer */
+.modal-footer {
+    padding: 15px;
+    display: flex;
+    justify-content: flex-end;
+    background: #f1f1f1;
+}
+
+.btn-primary {
+    background-color: hsl(176, 88%, 27%);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background-color:  hsl(176, 88%, 27%);
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.tab__body {
+    position: relative;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.delete-button-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.delete-button-container a {
+    color: #ff0000;  /* Red color for delete icon */
+    font-size: 18px;
+}
+
+
+</style>
+    <!--=============== MAIN ===============-->
+    <main class="main">
+      <!--=============== BREADCRUMB ===============-->
+      <section class="breadcrumb">
+        <ul class="breadcrumb__list flex container">
+          <li><a href="index.html" class="breadcrumb__link">Home</a></li>
+          <li><span class="breadcrumb__link">></span></li>
+          <li><span class="breadcrumb__link">Account</span></li>
+        </ul>
+      </section>
+
+      <!--=============== ACCOUNTS ===============-->
+      <section class="accounts section--lg">
+        <div class="accounts__container container grid">
+          <div class="account__tabs">
+            <p class="account__tab {% if active_tab == 'dashboard' %}active-tab{% endif %}" data-target="#dashboard">
+              <i class="fi fi-rs-settings-sliders"></i> Dashboard
+            </p>
+            <p class="account__tab {% if active_tab == 'orders' %}active-tab{% endif %}" data-target="#orders">
+              <i class="fi fi-rs-shopping-bag"></i> Orders
+            </p>
+            <p class="account__tab {% if active_tab == 'update-profile' %}active-tab{% endif %}" data-target="#update-profile">
+              <i class="fi fi-rs-user"></i> Update Profile
+            </p>
+            <p class="account__tab {% if active_tab == 'address' %}active-tab{% endif %}" data-target="#address">
+              <i class="fi fi-rs-marker"></i> My Address
+            </p>
+            <p class="account__tab {% if active_tab == 'change-password' %}active-tab{% endif %}"  data-target="#change-password">
+              <i class="fi fi-rs-settings-sliders"></i> Change Password
+            </p>
+            <p class="account__tab {% if active_tab == 'Wallet' %}active-tab{% endif %} " data-target="#Wallet" >
+              <i class="fi fi-rs-settings-sliders"></i> Wallet
+
+            </p>
+          </div>
+          <div class="tabs__content">
+            <div class="tab__content " content id="dashboard">
+              <!-- ===================================dashboard===================================== -->
+               {% if user %}
+               <div class="dashboard-container">
+               
+              
+                <main class="container">
+                  <!-- Profile Section -->
+                  <section class="profile-card">
+                    <div class="profile-header">
+                      <div class="profile-icon">
+                        <i class="bi bi-person-circle"></i>
+                      </div>
+                      <h2>{{ user.first_name|default:user.username }}</h2>
+                      <p class="subtitle">Member since {{ user.date_joined|date:"F j, Y" }}</p>
+                    </div>
+                    <div class="profile-details">
+                      <ul>
+                        <li><strong>Username:</strong> {{ user.username }}</li>
+                        <li><strong>Email:</strong> {{ user.email }}</li>
+                        <li><strong>First Name:</strong> {{ user.first_name|default:"Not Provided" }}</li>
+                        <li><strong>Last Name:</strong> {{ user.last_name|default:"Not Provided" }}</li>
+                        <li><strong>Date Joined:</strong> {{ user.date_joined|date:"F j, Y" }}</li>
+                      </ul>
+                    </div>
+               
+                  </section>
+                </main>
+              </div>
+              
+            </div>
+            <div class="tab__content" id="orders">
+              <h3 class="tab__header">Your Orders</h3>
+              <div class="tab__body">
+                {% if orderdetails %}
+                <table class="placed__order-table">
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Date</th>
+                      <th>Status</th>
+                      <th>Total</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for val in orderdetails %}
+                    <tr>
+                      <td>{{ val.id }}</td>
+                      <td>{{ val.created_at }}</td>
+                      <td class="status {{ val.status|lower }}">
+                        {{ val.status }}
+                      </td>
+                      <td>${{ val.total_price }}</td>
+                      <td><a href="{% url 'orderdetails' id=val.id %}" class="btn view__order">View</a></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+                {% else %}
+                <div class="no-orders">
+                  <h2>You have no orders</h2>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="tab__content {% if active_tab == 'update-profile' %}active-tab{% endif %}" content id="update-profile">
+              <h3 class="tab__header">Update Profile</h3>
+              <div class="tab__body">
+                <form class="form grid" method="POST"  action="{% url 'updateprofile' %}" > 
+                  {% csrf_token %}
+                  <input
+                    type="text"
+                    placeholder="Username"
+                    class="form__input"
+                    name="username"
+                  />
+                  <input
+                  type="email"
+                  placeholder="Email address"
+                  class="form__input"
+                  name="email"
+                />
+                <input
+                type="password"
+                placeholder=" password"
+                class="form__input"
+                name="password"
+              />
+              {% if error %}
+              <p class="error">{{ error }}</p>
+              {% endif %}
+          
+                  <div class="form__btn">
+                    <button class="btn btn--md"   >Save</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+
+            <div class="tab__content {% if active_tab == 'change-password' %}active-tab{% endif %}" content id="change-password">
+              <h3 class="tab__header">Change Password</h3>
+              <div class="tab__body">
+                <form class="form grid"  method="POST"  action="{% url 'changepassword' %}" >
+                  {% csrf_token %}
+                  <input
+                    type="password"
+                    placeholder="Current Password"
+                    class="form__input"
+                    name = 'currentpassword'
+                  />
+                  
+                  <input
+                    type="password"
+                    placeholder="New Password"
+                    class="form__input"
+                    name="pass1"
+                  />
+                  <input
+                    type="password"
+                    placeholder="Confirm Password"
+                    class="form__input"
+                    name="pass2"
+                  />
+                  {% if passerror %}
+                  <p style="color: red;">{{ passerror }}</p>
+                  {% endif %}
+                  {% if passsuccess %}
+                  <p style="color: green;">{{ passsuccess }}</p>
+                  {% endif %}
+                  <div class="form__btn">
+                    <button class="btn btn--md">Save</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+          
+            <div class="tab__content {% if active_tab == 'Wallet' %}active-tab{% endif %}" content id="Wallet">
+              <h3 class="tab__header">Wallet</h3>
+              <div class="tab__body">
+                <div class="wallet-section" style="margin-top: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                  <h5 style="margin-bottom: 15px; color: #333; font-weight: 600; font-size: 18px;">Wallet Balance</h5>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                      <p style="margin: 0; font-size: 16px; color: #555;">
+                          Your current wallet balance is:
+                      
+                          <strong style="font-size: 18px; color: #007bff;">₹{{ wallet.balance }}</strong>
+                      </p>
+                      <img src="https://via.placeholder.com/40" alt="Wallet Icon" style="width: 40px; height: 40px;">
+                  </div>
+                 
+                  
+              </div>
+              
+              </div>
+            </div>
+          
+
+
+
+
+
+
+          
+
+
+
+
+            <div class="tab__content {% if active_tab == 'address' %} active-tab {% endif %}" id="address">
+              <div>
+              <div class="tab__header-container" style="display: flex; justify-content: space-between; align-items: center;">
+                  <h3 class="tab__header">Shipping Address</h3>
+                  <button 
+                  class="btn btn__primary" 
+                  style="align-self: flex-end; padding: 0.5rem 1rem; font-size: 1rem; background-color: hsl(176, 88%, 27%); color: white; border: none; border-radius: 5px; cursor: pointer;" 
+                  id="openAddModalButton">
+                  Add Address
+              </button>
+              </div>
+              {% if address %}
+              {% for val in address %}
+              <div class="tab__body">
+                <address class="address">
+                    {{ val.fullname }}, {{ val.city }} <br />
+                    {{ val.state }} <br />
+                    {{ val.postal_code }}<br />
+                    {{ val.landmark }}
+                    {{ val.phone_number }}
+                </address>
+                
+                <div class="delete-button-container">
+                    <a href="{% url 'delete_address' id=val.id  %}" onclick="return confirm('Are you sure you want to delete this item?')">
+                        <i class="fi fi-rs-trash table__trash"></i>
+                    </a>
+                </div>
+            
+                <button type="button" id="openEditModalButton">Edit Address</button>
+            </div>
+            </div>
+                <div id="editAddressModal" class="modal" style="display: none;">
+                  <div class="modal-content">
+                      <div class="modal-header">
+                          <h2>Edit Address</h2>
+                          <span class="close" id="closeEditModal">&times;</span>
+                      </div>
+                      <div class="modal-body">
+                          <form id="editAddressForm" method="POST" action="{% url 'editaddress' id=val.id %}" >
+                            {% csrf_token %}
+                              <div class="form-group">
+                                  <label for="editAddressLine1"> Full Name :</label>
+                                  <input type="text" id="editAddressLine1" name="fullname" value="{{val.fullname}}" required>
+                              </div>
+                              <div class="form-group">
+                                  <label for="editCity">City:</label>
+                                  <input type="text" id="editCity" name="city" value="{{val.city}}" required>
+                              </div>
+                              <div class="form-group">
+                                <label for="editCity">State</label>
+                                <input type="text" id="editState" name="state" value="{{val.state}}" required>
+                            </div>
+                              <div class="form-group">
+                                  <label for="editPostalCode">Postal Code:</label>
+                                  <input type="text" id="editPostalCode" name="postalcode" value="{{val.postal_code}}" required>
+                              </div>
+                              <div class="form-group">
+                                <label for="editPostalCode">Landmark</label>
+                                <input type="text" id="editLandmark" name="landmark" value="{{val.landmark}}" required>
+                            </div>
+                            <div class="form-group">
+                              <label for="editPostalCode">Postal Code:</label>
+                              <input type="text" id="editPhonenumber" name="phonenumber" value="{{val.phone_number}}" required>
+                          </div>
+                          </form>
+                      </div>
+                      <div class="modal-footer">
+                          <button type="button" class="btn-secondary" id="cancelEditButton">Cancel</button>
+                          <button type="submit" class="btn-primary" form="editAddressForm">Save Changes</button>
+                      </div>
+                  </div>
+              </div>
+          
+              {% endfor %}
+              {% else %}
+              <h4>No address added</h4>
+              {% endif %}
+          </div>
+          
+             
+              
+                  
+            
+          <div class="modal" id="addAddressModal" style="display: none;">
+            <div class="modal__overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6);" onclick="closeAddAddressModal()"></div>
+            <div class="modal__content" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);">
+                <h3 class="modal__title" style="font-size: 1.5rem; margin-bottom: 1.5rem; text-align: center;">Add Address</h3>
+                <form action="{% url 'add_address' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="form__group" style="margin-bottom: 1rem;">
+                        <label for="add_fullname" class="form__label">Full Name</label>
+                        <input type="text" id="add_fullname" name="fullname" class="form__input" required>
+                    </div>
+                    <div class="form__group" style="margin-bottom: 1rem;">
+                        <label for="add_city" class="form__label">City</label>
+                        <input type="text" id="add_city" name="city" class="form__input" required>
+                    </div>
+                    <div class="form__group" style="margin-bottom: 1rem;">
+                        <label for="add_state" class="form__label">State</label>
+                        <input type="text" id="add_state" name="state" class="form__input" required>
+                    </div>
+                    <div class="form__group" style="margin-bottom: 1rem;">
+                        <label for="add_postal_code" class="form__label">Postal Code</label>
+                        <input type="text" id="add_postal_code" name="postalcode" class="form__input" required>
+                    </div>
+                    <div class="form__group" style="margin-bottom: 1rem;">
+                        <label for="add_landmark" class="form__label">Landmark</label>
+                        <input type="text" id="add_landmark" name="landmark" class="form__input">
+                    </div>
+                    <div class="form__group" style="margin-bottom: 1rem;">
+                        <label for="add_phone_number" class="form__label">Phone Number</label>
+                        <input type="text" id="add_phone_number" name="phonenumber" class="form__input" required>
+                    </div>
+                    <div class="modal__actions" style="display: flex; justify-content: space-between;">
+                        <button type="button" id="cancelAddButton" class="btn btn__cancel" style="background-color: #ccc; padding: 0.5rem 1rem; border: none; border-radius: 5px;">Cancel</button>
+                        <button type="submit" class="btn btn__primary" style="background-color: hsl(176, 88%, 27%); color: white; padding: 0.5rem 1rem; border: none; border-radius: 5px;">Save</button>
+                    </div>
+                </form>
+                <span id="closeAddModal" class="close" style="cursor: pointer;">&times;</span>
+            </div>
+          </div>
+       
+
+          
+
+
+            
+
+          </div>
+        </div>
+        {% endif %}
+      </section>
+
+      <!--=============== NEWSLETTER ===============-->
+      <section class="newsletter section">
+        <div class="newsletter__container container grid">
+          <h3 class="newsletter__title flex">
+            <img
+              src="./assets/img/icon-email.svg"
+              alt=""
+              class="newsletter__icon"
+            />
+            Sign in to Newsletter
+          </h3>
+          <p class="newsletter__description">
+            ...and receive $25 coupon for first shopping.
+          </p>
+          <form action="" class="newsletter__form">
+            <input
+              type="text"
+              placeholder="Enter Your Email"
+              class="newsletter__input"
+            />
+            <button type="submit" class="newsletter__btn">Subscribe</button>
+          </form>
+        </div>
+      </section>
+    </main>
+    <script>
+      // Select all tab buttons and tab content containers
+      const tabs = document.querySelectorAll('.account__tab');
+      const tabContents = document.querySelectorAll('.tab__content');
+    
+      // Add click event listeners to each tab
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          // Remove 'active-tab' class from all tabs
+          tabs.forEach((t) => t.classList.remove('active-tab'));
+          
+          // Add 'active-tab' to the clicked tab
+          tab.classList.add('active-tab');
+    
+          // Hide all tab contents
+          tabContents.forEach((content) => content.classList.remove('active-tab'));
+    
+          // Show the related tab content
+          const target = tab.dataset.target;
+          const targetContent = document.querySelector(target);
+          if (targetContent) {
+            targetContent.classList.add('active-tab');
+          }
+        });
+      });
+    </script>
+  <script>
+// Add Address Modal Script
+// Add Address Modal Script
+document.addEventListener('DOMContentLoaded', () => {
+    const addAddressModal = document.getElementById('addAddressModal');
+    const openAddModalButton = document.getElementById('openAddModalButton'); // Button to open Add Address Modal
+    const closeAddModalButton = document.getElementById('closeAddModal');
+    const cancelAddButton = document.getElementById('cancelAddButton');
+
+    // Open Add Modal
+    openAddModalButton.addEventListener('click', () => {
+        addAddressModal.style.display = 'flex';
+    });
+
+    // Close Add Modal
+    const closeAddAddressModal = () => {
+        addAddressModal.style.display = 'none';
+    };
+
+    closeAddModalButton.addEventListener('click', closeAddAddressModal);
+    cancelAddButton.addEventListener('click', closeAddAddressModal);
+
+    // Close Modal on Overlay Click
+    window.addEventListener('click', (event) => {
+        if (event.target === addAddressModal) {
+            closeAddAddressModal();
+        }
+    });
+});
+
+
+</script>
+<script>
+ // Open Modal
+// Modal Elements
+const openEditModalButton = document.getElementById('openEditModalButton');
+const editAddressModal = document.getElementById('editAddressModal');
+const closeEditModalButton = document.getElementById('closeEditModal');
+const cancelEditButton = document.getElementById('cancelEditButton');
+
+// Open Modal
+openEditModalButton.addEventListener('click', () => {
+    editAddressModal.style.display = 'flex';
+});
+
+// Close Modal (Close Button or Cancel Button)
+const closeModal = () => {
+    editAddressModal.style.display = 'none';
+};
+
+closeEditModalButton.addEventListener('click', closeModal);
+cancelEditButton.addEventListener('click', closeModal);
+
+// Close Modal When Clicking Outside
+window.addEventListener('click', (event) => {
+    if (event.target === editAddressModal) {
+        closeModal();
+    }
+});
+
+
+</script>
+<!-- sweet alert -->
+{% if messages %}
+<script>
+    {% for message in messages %}
+        {% if message.tags == 'error' %}
+            Swal.fire({
+                icon: 'error',  // Error icon
+                title: 'Oops...',
+                text: '{{ message }}',
+                confirmButtonText: 'OK'
+            });
+        {% elif message.tags == 'success' %}
+            Swal.fire({
+                icon: 'success',  // Success icon
+                title: 'Success!',
+                text: '{{ message }}',
+                confirmButtonText: 'OK'
+            });
+        {% endif %}
+    {% endfor %}
+</script>
+{% endif %}
+
+
+
+
+
+
+
+    <!--=============== FOOTER ===============-->
+   {% endblock %}

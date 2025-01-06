@@ -1,0 +1,20 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+project/
+
+# Django static and media files
+staticfiles/
+media/
+
+# Environment variables
+.env
+
+# Database
+*.postgresql
+
+# System files
+Thumbs.db

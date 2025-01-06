@@ -1,0 +1,106 @@
+{% extends "header.html" %}
+
+{% block content %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #f8f9fa;
+    }
+
+    .order-failure-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f8f9fa;
+    }
+
+    .failure-box {
+        background: white;
+        padding: 40px 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        max-width: 500px;
+        width: 100%;
+    }
+
+    .crossmark {
+        background-color: #dc3545;
+        color: white;
+        font-size: 40px;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto 20px;
+    }
+
+    .failure-title {
+        color: #dc3545;
+        font-size: 28px;
+        margin-bottom: 10px;
+    }
+
+    .failure-message {
+        font-size: 16px;
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+
+    .order-details {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        color: #495057;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 5px;
+        border: none;
+        border-radius: 5px;
+        color: white;
+        font-size: 16px;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .btn-home {
+        background-color: #007bff;
+    }
+
+    .btn-support {
+        background-color: #dc3545;
+    }
+
+    .btn:hover {
+        opacity: 0.9;
+    }
+
+</style>
+<div class="order-failure-container">
+    <div class="failure-box">
+        <div class="crossmark">
+            <span>&#10006;</span>
+        </div>
+        <h1 class="failure-title">Order Failed</h1>
+        <p class="failure-message">
+            We’re sorry, but your order could not be processed at this time. Please try again later or contact support for assistance.
+        </p>
+        <p class="order-details">
+            <strong>Reason:</strong> {{ error }}<br>
+            <strong>Attempted Order Number:</strong> {{ order_number }}
+        </p>
+        <a href="{% url 'index' %}" class="btn btn-home">Return to Home</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends 'admin/headeradmin.html' %}
+{% load static %}
+{% block content %}
+      <section class="content-main">
+        <div class="content-header">
+          <div>
+            <h2 class="content-title card-title">Categories</h2>
+            <p>Add or edit  a category</p>
+          </div>
+          <div>
+            <input
+              type="text"
+              placeholder="Search Categories"
+              class="form-control bg-white"
+            />
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-3">
+                <form enctype="multipart/form-data" method="POST" action="{% url 'create_catagory' %}">
+                  {% csrf_token %}
+                  <div class="mb-4">
+                      <label for="product_name" class="form-label">Name</label>
+                      <input type="text" name="name" placeholder="Type here" class="form-control" id="product_name" required />
+                  </div>
+                  <div class="mb-4">
+                      <label for="product_slug" class="form-label">Description</label>
+                      <input type="text" name="description" placeholder="Type here" class="form-control" id="product_slug" />
+                  </div>
+                  <div class="mb-4">
+                      <label for="product_image" class="form-label">Image</label>
+                      <input type="file" name="image" class="form-control" id="product_image" accept="image/*" required />
+                  </div>
+                  <div class="mb-4">
+                      <label for="offer" class="form-label">Offer</label>
+                      <textarea name="offer" placeholder="Type here" class="form-control" id="product_offer"></textarea>
+                  </div>
+                  <div class="d-grid">
+                    {% if createerror %}
+                    <p style="color: red;">{{ createerror  }}</p>
+                    {% endif %}
+                      <button type="submit" class="btn btn-primary">Create Category</button>
+                  </div>
+              </form>
+              
+                
+              </div>
+              <div class="col-md-9">
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead>
+                      <tr>
+                        
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>image</th>
+                        <th>offer</th>
+                        <th class="text-end">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {%  if item %}
+                      {% for val in item %}
+                  
+                      <tr>
+                        
+                        <td>{{ val.id }}</td>
+                        <td><b>{{ val.name }}</b></td>
+                        <td>{{  val.description }}</td>
+                        <td><img src="{{ val.image.url }}" alt="Image" style="width: 50px; height: 50px;"></td>
+
+                        <td>{{val.offer  }}</td>
+                        <td class="text-end">
+                         
+                            <div class="action-buttons">
+                              <a href="{% url 'edit_catagory' id=val.id %}">
+                                <button class="btn btn-primary">Edit</button>
+                              </a>
+                              {% if val.is_active %}
+                              <a href="{% url 'unlist_catagory' id=val.id %}"><button class="btn btn-danger" >Unlist</button></a>
+                              {% else %}
+                              <a href="{% url 'unlist_catagory' id=val.id %}"><button class="btn btn-primary" >list</button></a>
+                              {% endif %}
+                             
+                            </div>
+                  
+                          <!-- dropdown //end -->
+                        </td>
+                      </tr>
+                      {% endfor  %}
+                      {% endif %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <!-- .col// -->
+            </div>
+            <!-- .row // -->
+          </div>
+          <!-- card body .// -->
+        </div>
+        <!-- card .// -->
+      </section>
+      <!-- content-main end// -->
+  {% endblock %}

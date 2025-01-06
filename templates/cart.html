@@ -1,0 +1,330 @@
+{% extends 'header.html' %}
+{% load static %}
+{% block content %}
+{% if messages %}
+<script>
+    {% for message in messages %}
+        {% if message.tags == 'error' %}
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: '{{ message }}',
+                confirmButtonText: 'OK'
+            });
+       
+        {% endif %}
+    {% endfor %}
+</script>
+{% endif %}
+
+<script src="https://unpkg.com/htmx.org@1.9.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{% static 'assets/js/htmx.min.js' %}" ></script>
+
+<script>
+ document.body.addEventListener('htmx:afterRequest', function (event) {
+    const xhr = event.detail.xhr;
+
+    try {
+        const response = JSON.parse(xhr.responseText);
+
+        if (response.status === "success") {
+            const itemId = event.target.closest("tr").dataset.itemId;
+
+            // Update quantity
+            const quantityElement = document.querySelector(`#quantity-${itemId}`);
+            if (quantityElement) {
+                quantityElement.textContent = response.quantity;
+            }
+
+            // Update item total
+            const itemTotalElement = document.querySelector(`#item-total-${itemId}`);
+            if (itemTotalElement) {
+                itemTotalElement.textContent = `$${parseFloat(response.item_total).toFixed(2)}`;
+            }
+
+            // Update cart subtotal
+            const cartSubtotalElement = document.querySelector(".cart__total-price");
+            if (cartSubtotalElement) {
+                cartSubtotalElement.textContent = `$${parseFloat(response.carttotal).toFixed(2)}`;
+            }
+
+            // Update shipping total
+            const shippingTotalElement = document.querySelector(".cart__total-price.shipping-total");
+            if (shippingTotalElement) {
+                shippingTotalElement.textContent = `$${parseFloat(response.shipping).toFixed(2)}`;
+            }
+        } else {
+            // Show error message
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: response.message,
+                confirmButtonText: "OK",
+            });
+        }
+    } catch (e) {
+        console.error("Error processing JSON response:", e);
+        Swal.fire({
+            icon: "error",
+            title: "Unexpected Error",
+            text: "Failed to process server response.",
+            confirmButtonText: "OK",
+        });
+    }
+});
+
+</script>
+<style>
+  /* Quantity Control Container */
+.quantity-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e0e0e0; /* Light border for separation */
+    border-radius: 8px; /* Rounded corners for the control */
+    overflow: hidden; /* To ensure clean edges */
+    width: fit-content; /* Adjust to content width */
+    background-color: #ffffff; /* Clean white background */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    padding: 5px; /* Padding around the whole group for breathing room */
+    gap: 10px; /* Space between buttons and quantity value */
+}
+
+/* Quantity Buttons */
+.quantity-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px; /* Slightly wider buttons for comfort */
+    height: 45px; /* Slightly taller buttons for comfort */
+    font-size: 1.4rem; /* Moderate font size for readability */
+    font-weight: bold; /* Bold font for visibility */
+    color: #555555; /* Neutral dark text color */
+    background-color: #f1f3f4; /* Light grey background for buttons */
+    border: none; /* Remove default button borders */
+    border-radius: 4px; /* Slightly rounded corners for buttons */
+    cursor: pointer;
+    transition: all 0.2s ease-in-out; /* Smooth transitions */
+}
+
+.quantity-btn:hover {
+    background-color: #e0e0e0; /* Darker grey on hover */
+}
+
+.quantity-btn:active {
+    transform: scale(0.95); /* Shrink slightly when pressed */
+}
+
+/* Quantity Value */
+.quantity-value {
+    font-size: 1.4rem; /* Larger font size for prominence */
+    font-weight: 600; /* Semi-bold font for visibility */
+    color: #333333; /* Dark text for contrast */
+    padding: 5px 20px; /* Extra padding for breathing space */
+    text-align: center; /* Center text */
+    background-color: #ffffff; /* Match background color */
+    border: 1px solid #e0e0e0; /* Light border for clarity */
+    border-radius: 4px; /* Slightly rounded corners for the value box */
+    min-width: 50px; /* Ensure space for at least two digits */
+}
+
+/* ============================================================= */
+/* General Table Styles */
+.table {
+    border-collapse: collapse; /* Merge borders for a clean look */
+    width: 100%; /* Full width of the container */
+    table-layout: fixed; /* Ensure columns stay uniform */
+}
+
+/* Table Header */
+.table thead th {
+    text-align: center; /* Center-align header content */
+    font-size: 0.9rem; /* Small font for headers */
+    font-weight: 600; /* Bold for clarity */
+    padding: 4px; /* Reduced padding for tighter layout */
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+/* Table Rows */
+.table tbody tr {
+    border-bottom: 1px solid #e0e0e0; /* Add separation between rows */
+    vertical-align: middle; /* Align content vertically in the middle */
+}
+
+/* Table Cells */
+.table tbody td {
+    text-align: center; /* Center-align cell content */
+    padding: 4px; /* Minimal padding for reduced gaps */
+    font-size: 0.85rem; /* Smaller font for compact look */
+    white-space: nowrap; /* Prevent wrapping */
+}
+
+/* Image Column */
+.table__img {
+    max-width: 40px; /* Smaller image size */
+    height: auto;
+    border-radius: 4px; /* Optional: rounded corners for images */
+}
+
+/* Quantity Control */
+.quantity-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px; /* Minimal spacing between buttons and quantity */
+}
+
+/* Quantity Buttons */
+.quantity-btn {
+    width: 28px; /* Compact button width */
+    height: 28px; /* Compact button height */
+    font-size: 0.9rem; /* Smaller text for buttons */
+    border: 1px solid #ccc; /* Subtle border */
+    background-color: #f8f9fa; /* Light grey background */
+    cursor: pointer;
+    border-radius: 4px; /* Rounded corners */
+    transition: all 0.2s ease-in-out;
+}
+
+.quantity-btn:hover {
+    background-color: #e0e0e0; /* Darker grey on hover */
+}
+
+.quantity-btn:active {
+    transform: scale(0.95); /* Slight shrink effect on click */
+}
+
+/* Trash Icon */
+.table__trash {
+    font-size: 1rem; /* Standard size for the icon */
+    color: #ff6b6b; /* Bright red for remove button */
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+}
+
+.table__trash:hover {
+    color: #ff4b4b; /* Slightly darker red on hover */
+}
+
+/* Adjust Description */
+.table__description {
+    font-size: 0.8rem; /* Smaller font for product descriptions */
+    color: #666; /* Lighter color for secondary text */
+    max-width: 100px; /* Limit width for better readability */
+    overflow: hidden; /* Hide overflowed text */
+    text-overflow: ellipsis; /* Add ellipsis for overflowed text */
+    white-space: nowrap; /* Prevent wrapping */
+}
+
+</style>
+
+
+<main class="main">
+  <section class="cart section--sm container">
+    <div class="table__container" style="overflow-x: auto; white-space: nowrap;">
+      <table class="table" style="width: 100%; table-layout: fixed;">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Size</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Remove</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if items %}
+            {% for entry in items %}
+              <tr id="cart-item-{{ entry.item.id }}" data-item-id="{{ entry.item.id }}">
+                <td>
+                  <img src="{{ entry.item.product.image1.url }}" alt="" class="table__img" style="max-width: 100%; height: auto;" />
+                </td>
+                <td>
+                  <div>{{ entry.item.size }}</div>
+                  {% if entry.stock == 0 %}
+                  <div style="font-size: 14px; color: red;">Out of stock</div>
+                  {% elif entry.stock < 5 %}
+                  <div style="font-size: 14px; color: red;">Only {{entry.stock}} left</div>
+                  {% else %}
+                  <div style="font-size: 14px; color: green;">available</div>
+                  {% endif %}
+
+              </td>
+              
+                <td>
+                  <h3 class="table__title">{{ entry.item.product.name }}</h3>
+                  <p class="table__description">{{ entry.item.description }}</p>
+                </td>
+                <td>
+                  <span class="table__price">${{ entry.item.product.offer }}</span>
+                </td>
+                <td>
+                  <div class="quantity-control">
+                    <button 
+                    class="quantity-btn decrease"
+
+                    hx-post="{% url 'update_cart' id=entry.item.id %}"
+                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                    hx-vals='{"action": "decrease"}'
+                    hx-target="#cart-item-{{ entry.item.id }}"
+                    hx-swap="none" 
+                    hx-on="htmx:afterRequest: processResponse(event)">
+                    -
+                  </button>
+                  <span id="quantity-{{ entry.item.id }}">{{ entry.item.quantity }}</span>
+                  <button 
+                  class="quantity-btn increase"
+
+                  hx-post="{% url 'update_cart' id=entry.item.id %}"
+                  hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                  hx-vals='{"action": "increase"}'
+                  hx-target="#cart-item-{{ entry.item.id }}"
+                  hx-swap="none" 
+                  hx-on="htmx:afterRequest: processResponse(event)">
+                  +
+                </button> 
+                <p style="color: red;">{{entry.item.stock}}</p>
+                  
+                </div>
+                </td>
+               
+                <td>
+                  <a href="{% url 'deletecart' id=entry.item.id %}" onclick="return confirm('Are you sure you want to delete this item?')">
+                    <i class="fi fi-rs-trash table__trash"></i>
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7">Cart is empty</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cart__total">
+      <h3 class="section__title">Cart Totals</h3>
+      <table class="cart__total-table">
+        {% if carttotal %}
+          <tr>
+            <td><span class="cart__total-title">Cart Subtotal</span></td>
+            <td><span class="cart__total-price">₹{{ carttotal }}</span></td>
+          </tr>
+          <tr>
+            <td><span class="cart__total-title">Total (include addtional 150)</span></td>
+            <td><span class="cart__total-price shipping-total">₹{{shipping}}</span></td>
+          </tr>
+         
+        {% endif %}
+      </table>
+      <a href="{% url 'checkout' %}" class="btn flex btn--md">
+        <i class="fi fi-rs-box-alt"></i> Proceed To Checkout
+      </a>
+    </div>
+  </section>
+</main>
+{% endblock %}  

@@ -1,0 +1,371 @@
+{% extends 'admin/headeradmin.html' %}
+
+{% load static %}
+{% block content %}
+    <style>
+      /* General form styling */
+form {
+    max-width: 600px;
+    margin: auto;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9;
+    font-size: 14px; /* Smaller font size for compactness */
+}
+
+/* Input fields */
+form input[type="text"],
+form input[type="file"],
+form select,
+form textarea {
+    width: 100%;
+    padding: 5px 8px;
+    font-size: 12px; /* Smaller font */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+/* Labels */
+form label {
+    font-weight: bold;
+    font-size: 12px; /* Smaller label size */
+    margin-bottom: 5px;
+    display: block;
+}
+
+/* Buttons */
+form button {
+    padding: 8px 15px;
+    font-size: 12px;
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+form button:hover {
+    background-color: #0056b3;
+}
+
+/* Card styling */
+.card {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: #f1f1f1;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+}
+
+.card-body {
+    padding: 10px;
+}
+
+/* Image previews */
+#imagePreview1 img,
+#imagePreview2 img,
+#imagePreview3 img {
+    max-width: 150px;
+    max-height: 150px; /* Make the preview smaller */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 5px;
+}
+
+#cropContainer1 img,
+#cropContainer2 img,
+#cropContainer3 img {
+    max-width: 100%; /* Adjust for container */
+    max-height: 200px; /* Limit height */
+    border-radius: 4px;
+    margin-bottom: 5px;
+}
+
+/* Buttons for cropping */
+#cropButton1, #cropButton2, #cropButton3 {
+    padding: 5px 10px;
+    font-size: 12px;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#cropButton1:hover,
+#cropButton2:hover,
+#cropButton3:hover {
+    background-color: #0056b3;
+}
+
+/* Error message */
+form p {
+    color: red;
+    font-size: 12px; /* Smaller error message */
+    margin-top: -5px;
+}
+
+    </style>
+
+    
+            <section class="content-main">
+                <div class="row">
+                    <div class="col-9">
+                        <div class="content-header">
+                            <h2 class="content-title">Edit Product</h2>
+                           
+                        </div>
+                    </div>
+                    <!-- ------------------------------------------------------- -->
+                    <div class="col-lg-12">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h4>Basic</h4>
+                            </div>
+                            <div class="card-body">
+                              {% if item %}
+                              <form method="POST" enctype="multipart/form-data" action="{% url 'edit_product' id=item.id %}" id="imageUploadForm">
+                                {% csrf_token %}
+                                
+                                <!-- Product Details Section -->
+                                <div class="mb-4">
+                                    <label for="product_name" class="form-label">Product Name</label>
+                                    <input type="text" placeholder="Type here" name="name" class="form-control"  value="{{item.name}}"  id="product_name" />
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Product Description</label>
+                                    <textarea placeholder="Type here" class="form-control" name="description"  value="{{item.description}}"  rows="4"></textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-4">
+                                        <div class="mb-4">
+                                            <label class="form-label">Regular Price</label>
+                                            <input placeholder="$" type="text" name="price" class="form-control"  value="{{item.price}}" />
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="mb-4">
+                                            <label class="form-label">Offer Price</label>
+                                            <input placeholder="$" type="text" name="offer" class="form-control"  value="{{ item.offer }}"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <label class="form-label">Select Category</label>
+                                        <select class="form-select" name="catagory_id">
+                                            {% if cata %}
+                                                {% for val in cata %}
+                                                    <option value="{{ val.id }}">{{ val.name }}</option>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </select>
+                                    </div>
+                                </div>
+                            
+                                <!-- Media Section with Image Upload and Preview -->
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h4>Media</h4>
+                                    </div>
+                            
+                                    <!-- Image 1 Upload and Preview -->
+                                    <div class="card-body">
+                                        <div class="mb-4">
+                                            <label for="imageInput1" class="form-label">Upload Image 1</label>
+                                            <input type="file" id="imageInput1" class="form-control" accept="image/*" name="image1" value="{{ item.image1.url }}" />
+                                            <div id="imagePreview1" style="display:none; margin-top: 10px;">
+                                                <img id="previewImage1" src="" style="max-width: 100%; height: auto;" />
+                                            </div>
+                                            <div id="cropContainer1" style="display:none; margin-top: 10px;">
+                                                <img id="imageToCrop1" src="" />
+                                            </div>
+                                            <button type="button" id="cropButton1" style="display:none; margin-top: 10px;">Crop Image 1</button>
+                                        </div>
+                                    </div>
+                            
+                                    <!-- Image 2 Upload and Preview -->
+                                    <div class="card-body">
+                                        <div class="mb-4">
+                                            <label for="imageInput2" class="form-label">Upload Image 2</label>
+                                            <input type="file" id="imageInput2" class="form-control" accept="image/*" name="image2" value="{{ item.image2.url }}" />
+                                            <div id="imagePreview2" style="display:none; margin-top: 10px;">
+                                                <img id="previewImage2" src="" style="max-width: 100%; height: auto;" />
+                                            </div>
+                                            <div id="cropContainer2" style="display:none; margin-top: 10px;">
+                                                <img id="imageToCrop2" src="" />
+                                            </div>
+                                            <button type="button" id="cropButton2" style="display:none; margin-top: 10px;">Crop Image 2</button>
+                                        </div>
+                                    </div>
+                            
+                                    <!-- Image 3 Upload and Preview -->
+                                    <div class="card-body">
+                                        <div class="mb-4">
+                                            <label for="imageInput3" class="form-label">Upload Image 3</label>
+                                            <input type="file" id="imageInput3" class="form-control" accept="image/*" name="image3" value="{{ item.image3.url }}" />
+                                            <div id="imagePreview3" style="display:none; margin-top: 10px;">
+                                                <img id="previewImage3" src="" style="max-width: 100%; height: auto;" />
+                                            </div>
+                                            <div id="cropContainer3" style="display:none; margin-top: 10px;">
+                                                <img id="imageToCrop3" src="" />
+                                            </div>
+                                            <button type="button" id="cropButton3" style="display:none; margin-top: 10px;">Crop Image 3</button>
+                                        </div>
+                                    </div>
+                            
+                                </div>
+                                <!-- Hidden Inputs for Cropped Images -->
+<input type="hidden" name="croppedImage1" id="croppedImage1Data">
+<input type="hidden" name="croppedImage2" id="croppedImage2Data">
+<input type="hidden" name="croppedImage3" id="croppedImage3Data">
+
+                            
+                                <!-- Error Message -->
+                                {% if error %}
+                                    <p style="color: red;">{{ error }}</p>
+                                {% endif %}
+                                
+                                <div style="text-align: center;">
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                </div>
+                            </form>
+                            {% endif %}
+                             
+                     
+                       
+                        <!-- card end// -->
+                    </div>
+                </div>
+            </section>
+            <!-- content-main end// -->
+          
+        </main>
+        <script src="assets/js/vendors/jquery-3.6.0.min.js"></script>
+        <script src="assets/js/vendors/bootstrap.bundle.min.js"></script>
+        <script src="assets/js/vendors/select2.min.js"></script>
+        <script src="assets/js/vendors/perfect-scrollbar.js"></script>
+        <script src="assets/js/vendors/jquery.fullscreen.min.js"></script>
+        <!-- Main Script -->
+        <script src="{% static 'assets/js/main.js' %}" type="text/javascript"></script>
+         <!-- Cropper.js JS -->
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+         <script>
+            document.addEventListener('DOMContentLoaded', function() {
+    function setupImageCropping(imageInputId, imageToCropId, cropContainerId, cropButtonId, previewImageId, croppedImageDataId) {
+        var cropper = null;
+        var imageInput = document.getElementById(imageInputId);
+        var imageToCrop = document.getElementById(imageToCropId);
+        var cropContainer = document.getElementById(cropContainerId);
+        var cropButton = document.getElementById(cropButtonId);
+        var previewImage = document.getElementById(previewImageId);
+        var croppedImageDataInput = document.getElementById(croppedImageDataId);
+
+        // Reset image input to clear any previous selection
+        imageInput.value = '';
+
+        imageInput.addEventListener("change", function (e) {
+            var file = e.target.files[0];
+            if (!file) return;
+
+            var reader = new FileReader();
+            reader.onload = function (event) {
+                // Clear previous cropper if exists
+                if (cropper) {
+                    cropper.destroy();
+                }
+
+                // Set image source
+                imageToCrop.src = event.target.result;
+
+                // Initialize Cropper
+                cropper = new Cropper(imageToCrop, {
+                    aspectRatio: 1, // Square crop
+                    viewMode: 1,
+                    autoCropArea: 0.8, // Increase crop area
+                    minCropBoxWidth: 100,
+                    minCropBoxHeight: 100,
+                    ready: function() {
+                        // Automatically crop when image is loaded
+                        var cropped = cropper.getCroppedCanvas({
+                            width: 300, // Set a standard size
+                            height: 300
+                        });
+                        
+                        // Show preview
+                        previewImage.src = cropped.toDataURL();
+                        document.getElementById(previewImageId.replace('previewImage', 'imagePreview')).style.display = "block";
+
+                        // Set cropped image data
+                        croppedImageDataInput.value = cropped.toDataURL('image/jpeg');
+                    }
+                });
+
+                // Show crop container and button
+                cropContainer.style.display = "block";
+                cropButton.style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        });
+
+        cropButton.addEventListener("click", function () {
+            if (cropper) {
+                // Get cropped canvas
+                var canvas = cropper.getCroppedCanvas({
+                    width: 300, // Standard width
+                    height: 300
+                });
+
+                // Display preview
+                previewImage.src = canvas.toDataURL();
+                document.getElementById(previewImageId.replace('previewImage', 'imagePreview')).style.display = "block";
+
+                // Convert cropped image to base64 and set to hidden input
+                var croppedImageBase64 = canvas.toDataURL("image/jpeg");
+                croppedImageDataInput.value = croppedImageBase64;
+            }
+        });
+    }
+
+    // Setup for each image input
+    setupImageCropping(
+        'imageInput1', 
+        'imageToCrop1', 
+        'cropContainer1', 
+        'cropButton1', 
+        'previewImage1', 
+        'croppedImage1Data'
+    );
+
+    setupImageCropping(
+        'imageInput2', 
+        'imageToCrop2', 
+        'cropContainer2', 
+        'cropButton2', 
+        'previewImage2', 
+        'croppedImage2Data'
+    );
+
+    setupImageCropping(
+        'imageInput3', 
+        'imageToCrop3', 
+        'cropContainer3', 
+        'cropButton3', 
+        'previewImage3', 
+        'croppedImage3Data'
+    );
+});
+         </script>
+       
+  {% endblock %}

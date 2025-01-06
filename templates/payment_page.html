@@ -1,0 +1,144 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete Your Payment</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    /* General Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+
+    .payment-container {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .payment-container h1 {
+      font-size: 1.8rem;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .payment-container p {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .payment-container button {
+      padding: 12px 20px;
+      background-color: #F37254;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .payment-container button:hover {
+      background-color: #e05a3c;
+    }
+
+    .payment-container img {
+      max-width: 100px;
+      margin: 0 auto 20px auto;
+      display: block;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 500px) {
+      .payment-container {
+        padding: 20px;
+      }
+
+      .payment-container h1 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="payment-container">
+    <img src="{% static 'user/img/logo.svg' %}" alt="Your Company Logo">
+    <h1>Complete Your Payment</h1>
+    <p>Total Amount: ₹{{ amount }}</p>
+    <button id="pay-now">Pay Now</button>
+  </div>
+
+  <script>
+  document.getElementById('pay-now').onclick = function () {
+  var options = {
+    "key": "{{ razorpay_key }}", // Razorpay key from backend
+    "amount": "{{ amount }}", // Amount in paise
+    "currency": "INR",
+    "name": "Evara",
+    "description": "Purchase Description",
+    "image": "user/img/logo.svg", // Optional
+    "order_id": "{{ razorpay_order_id }}", // Razorpay Order ID from backend
+    "handler": function (response) {
+      // Send the payment details back to your server
+      fetch("{% url 'razorpay_callback' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": "{{ csrf_token }}" // Ensure CSRF token is correctly passed
+        },
+        body: new URLSearchParams({
+          "razorpay_order_id": response.razorpay_order_id,
+          "razorpay_payment_id": response.razorpay_payment_id,
+          "razorpay_signature": response.razorpay_signature
+        })
+      })
+      .then(response => {
+        if (response.redirected) {
+          // Handle redirection
+          window.location.href = response.url;
+        } else {
+          alert("An error occurred. Please try again.");
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        alert("An error occurred. Please try again.");
+      });
+    },
+    "prefill": {
+      "name": "{{ user.get_full_name }}", // Optional
+      "email": "{{ user.email }}", // Optional
+      "contact": "{{ user_contact }}" // Optional
+    },
+    "theme": {
+      "color": "#F37254" // Customize button color
+    }
+  };
+
+  var rzp = new Razorpay(options);
+  rzp.open();
+};
+
+  </script>
+</body>
+</html>

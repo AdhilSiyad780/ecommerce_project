@@ -1,0 +1,347 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  /* Container for pagination */
+  .pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 40px;
+  }
+
+  /* Flex container for the pagination controls */
+  .pagination {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  /* Common style for pagination links */
+  .page-link {
+    padding: 10px 18px;
+    border-radius: 30px;
+    background-color: #4CAF50;
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Hover effect for pagination links */
+  .page-link:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+  }
+
+  /* Disabled link style (for first and last when on first/last page) */
+  .page-link:disabled {
+    background-color: #e0e0e0;
+    color: #b0b0b0;
+    cursor: not-allowed;
+  }
+
+  /* Page info style */
+  .current-page {
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: 600;
+    background-color: #f4f4f4;
+    border-radius: 20px;
+    color: #333;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Special color for first and last page links */
+  .first, .last {
+    background-color: #2196F3;
+  }
+
+  .first:hover, .last:hover {
+    background-color: #1976D2;
+  }
+
+  /* Add some space between page info and links */
+  .pagination-container .pagination {
+    gap: 30px;
+  }
+
+  /* Mobile responsive design for pagination */
+  @media (max-width: 768px) {
+    .pagination {
+      gap: 15px;
+    }
+
+    .page-link {
+      padding: 8px 15px;
+    }
+
+    .current-page {
+      font-size: 13px;
+      padding: 8px 12px;
+    }
+  }
+</style>
+  
+
+<style>
+  /* Sidebar styling */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 300px;
+    height: 100%;
+    background: #f8f9fa;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    overflow-y: auto;
+    z-index: 1000;
+    transition: left 0.3s ease;
+  }
+
+  .sidebar.active {
+    left: 0;
+  }
+
+  .sidebar h4 {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  .sidebar .form-group {
+    margin-bottom: 15px;
+  }
+
+  .sidebar .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+
+  .sidebar .form-group input,
+  .sidebar .form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+  }
+
+  /* Overlay for sidebar */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+
+  .sidebar-overlay.active {
+    display: block;
+  }
+
+  /* Filter button styling */
+  .filter-button {
+    display: inline-block;
+    padding: 10px 15px;
+    background: hsl(176, 88%, 27%);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+
+  .filter-button:hover {
+    background: #0056b3;
+  }
+</style>
+
+<!--=============== MAIN ===============-->
+<main class="main">
+  <!--=============== BREADCRUMB ===============-->
+  <section class="breadcrumb">
+    <ul class="breadcrumb__list flex container">
+      <li><a href="index.html" class="breadcrumb__link">Home</a></li>
+      <li><span class="breadcrumb__link">></span></li>
+      <li><span class="breadcrumb__link">Shop</span></li>
+    </ul>
+  </section>
+
+  <!--=============== PRODUCTS SECTION WITH FILTER BUTTON ===============-->
+  <section class="container section--lg">
+    <!-- Filter Button -->
+    <button class="filter-button" id="filterButton">Filter</button>
+
+    <div class="row">
+      <!-- Sidebar -->
+      <div class="sidebar" id="filterSidebar">
+        <h4>Filter Products</h4>
+        <form method="GET" action="{% url 'display_products' %}">
+          <!-- Sort by Price -->
+          <div class="form-group">
+            <label for="sort">Sort by Price</label>
+            <select id="sort" name="sort">
+              <option value="">Select</option>
+              <option value="low_to_high">Low to High</option>
+              <option value="high_to_low">High to Low</option>
+              <option value="name_asc" {% if request.GET.sort == "name_asc" %}selected{% endif %}>Name: A to Z</option>
+              <option value="name_desc" {% if request.GET.sort == "name_desc" %}selected{% endif %}>Name: Z to A</option>
+            </select>
+          </div>
+
+          <!-- Min Price -->
+          <div class="form-group">
+            <label for="min_price">Minimum Price</label>
+            <input type="number" id="min_price" name="min_price" placeholder="Enter min price" value="{{request.GET.min_price}}">
+          </div>
+
+          <!-- Max Price -->
+          <div class="form-group">
+            <label for="max_price">Maximum Price</label>
+            <input type="number" id="max_price" name="max_price" placeholder="Enter max price" value="{{request.GET.max_price}}">
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+              <option value="">All Categories</option>
+              {% for cat in cata %}
+              <option value="{{ cat.id }}">{{ cat.name }}</option>
+              {% endfor %}Size
+
+            </select>
+          </div>
+
+          <!-- Rating -->
+          <div class="form-group">
+            <label for="rating">Rating</label>
+            <select id="rating" name="rating">
+              <option value="">All Ratings</option>
+              <option value="5">5 Stars</option>
+              <option value="4">4 Stars & Above</option>
+              <option value="3">3 Stars & Above</option>
+              <option value="2">2 Stars & Above</option>
+              <option value="1">1 Star & Above</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Apply Filters</button>
+        </form>
+      </div>
+
+      <!-- Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <!-- Products -->
+      <div class="col-lg-12">
+        <section class="products">
+          <p class="total__products">We found <span>{{ item|length }}</span> items for you!</p>
+          <div class="products__container grid">
+            {% if item %}
+            {% for val in item %}
+            <div class="product__item">
+              <div class="product__banner">
+                <a href="{% url 'product_details' id=val.id %}">
+                  <div class="product__images">
+                    <img src="{{ val.image1.url }}" alt="" class="product__img default" />
+                    <img src="{{ val.image2.url }}" alt="" class="product__img hover" />
+                  </div>
+                  <div class="product__actions">
+                    <a href="#" class="action__btn" aria-label="Quick View">
+                      <i class="fi fi-rs-eye"></i>
+                    </a>
+                    <a href="{% url 'add_wishlist' id=val.id %}" class="action__btn" aria-label="Add to Wishlist">
+                      <i class="fi fi-rs-heart"></i>
+                    </a>
+                  </div>
+                </a>
+              </div>
+              <div class="product__content">
+                <h3 class="product__title">{{ val.name }}</h3>
+
+                <span class="product__category">{{ val.category.name }}</span>
+                <a href="details.html">
+                  <h3 class="product__title">{{ val.description }}</h3>
+                </a>
+                <div class="product__rating">
+                  {% for i in range|slice:":val.rating" %}
+                  <i class="fi fi-rs-star"></i>
+                  {% endfor %}
+                  {% for i in range|slice:"val.rating:" %}
+                  <i class="fi fi-rs-star-o"></i>
+                  {% endfor %}
+                </div>
+                <div class="product__price">
+                  <!-- Display the original price with a cut-through -->
+                  <span class="new__price"  style="color: black;" ><del>₹{{ val.price }}</del></span>
+                </div>
+                <div class="product__price flex">
+                  <!-- Display the offer price -->
+                  <span class="new__price">₹{{ val.offer }}</span>
+                </div>
+              </div>
+            </div>
+
+            {% endfor %}
+            {% else %}
+            <p>No products found.</p>
+            {% endif %}
+          </div>
+                      <!-- Pagination Controls -->
+         <!-- Pagination Controls -->
+<div class="pagination-container">
+  <div class="pagination">
+    {% if item.has_previous %}
+      <a href="?page=1&sort={{ request.GET.sort }}&min_price={{ request.GET.min_price }}&max_price={{ request.GET.max_price }}&category={{ request.GET.category }}&rating={{ request.GET.rating }}" class="page-link first">First</a>
+      <a href="?page={{ item.previous_page_number }}&sort={{ request.GET.sort }}&min_price={{ request.GET.min_price }}&max_price={{ request.GET.max_price }}&category={{ request.GET.category }}&rating={{ request.GET.rating }}" class="page-link prev">Previous</a>
+    {% endif %}
+
+    <!-- Page Number Display -->
+    <span class="current-page">
+      Page {{ item.number }} of {{ item.paginator.num_pages }}
+    </span>
+
+    {% if item.has_next %}
+      <a href="?page={{ item.next_page_number }}&sort={{ request.GET.sort }}&min_price={{ request.GET.min_price }}&max_price={{ request.GET.max_price }}&category={{ request.GET.category }}&rating={{ request.GET.rating }}" class="page-link next">Next</a>
+      <a href="?page={{ item.paginator.num_pages }}&sort={{ request.GET.sort }}&min_price={{ request.GET.min_price }}&max_price={{ request.GET.max_price }}&category={{ request.GET.category }}&rating={{ request.GET.rating }}" class="page-link last">Last</a>
+    {% endif %}
+  </div>
+</div>
+
+        </section>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const filterButton = document.getElementById('filterButton');
+  const filterSidebar = document.getElementById('filterSidebar');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+  // Open sidebar
+  filterButton.addEventListener('click', () => {
+    filterSidebar.classList.add('active');
+    sidebarOverlay.classList.add('active');
+  });
+
+  // Close sidebar
+  sidebarOverlay.addEventListener('click', () => {
+    filterSidebar.classList.remove('active');
+    sidebarOverlay.classList.remove('active');
+  });
+</script>
+{% endblock %}

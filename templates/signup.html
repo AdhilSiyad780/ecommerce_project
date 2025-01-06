@@ -1,0 +1,110 @@
+{% extends 'header.html' %} 
+
+
+
+{% block content %}
+<style>
+  .register {
+    width: 50%;             /* Sets the form width to half of its container */
+    margin: 0 auto;         /* Centers the form horizontally */
+    padding: 20px;          /* Adds space inside the form */
+    background-color: #f9f9f9; /* Light background for contrast */
+    border-radius: 8px;     /* Rounded corners for a clean look */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+</style>
+    <!--=============== MAIN ===============-->
+    <main class="main">
+      <!--=============== BREADCRUMB ===============-->
+      <section class="breadcrumb">
+        <ul class="breadcrumb__list flex container">
+          <li><a href="index.html" class="breadcrumb__link">Home</a></li>
+          <li><span class="breadcrumb__link">></span></li>
+          <li><span class="breadcrumb__link">Login / Register</span></li>
+        </ul>
+      </section>
+
+      <!--=============== LOGIN-REGISTER ===============-->
+      <section class="login-register section-sm">
+        <div class="login-register__container container grid">
+         
+          <div class="register" width="">
+            <h3 class="section__title">Create an Account</h3>
+            <form class="form grid"  method="POST" width="50%" >
+              {% csrf_token %}
+              <input 
+              type="text" 
+              placeholder="Username" 
+              class="form__input" 
+              name="uname" 
+              value="{{ username|default:'' }}" 
+            />
+            {% if usererror %}
+            <div class="alert">{{ usererror }}</div>
+            {% endif %}
+            <input 
+                type="email" 
+                placeholder="Your Email" 
+                class="form__input" 
+                name="email" 
+                value="{{ email|default:'' }}" 
+              />
+              {% if emailerror %}
+              <div class="alert">{{ emailerror }}</div>
+              {% endif %}
+              <input 
+              type="password" 
+              placeholder="Password" 
+              class="form__input" 
+              name="pass1" 
+            />
+            <input 
+            type="password" 
+            placeholder="Confirm Password" 
+            class="form__input" 
+            name="pass2" 
+          />
+          {% if error %}
+          <div class="alert">{{ error }}</div>
+          {% endif %}
+          {% if passerror %}
+          <div class="alert">{{ passerror }}</div>
+          {% endif %}
+        
+              <div class="form__btn">
+                <button class="btn">Submit & Register</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!--=============== NEWSLETTER ===============-->
+      <section class="newsletter section">
+        <div class="newsletter__container container grid">
+          <h3 class="newsletter__title flex">
+            <img
+              src="./assets/img/icon-email.svg"
+              alt=""
+              class="newsletter__icon"
+            />
+            Sign in to Newsletter
+          </h3>
+          <p class="newsletter__description">
+            ...and receive $25 coupon for first shopping.
+          </p>
+          <form action="" class="newsletter__form">
+            <input
+              type="text"
+              placeholder="Enter Your Email"
+              class="newsletter__input"
+            />
+            <button type="submit" class="newsletter__btn">Subscribe</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <!--=============== FOOTER ===============-->
+   {% endblock %}
