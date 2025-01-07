@@ -116,6 +116,11 @@
 .menu-item:hover > .menu-link::after {
     transform: rotate(180deg); /* Rotate the arrow when hovered */
 }
+#myChart {
+    max-width: 100%;
+    height: 400px;
+}
+
 
     </style>
    
@@ -187,22 +192,15 @@
       </div>
       
        
-        <div class="row">
-            <div class="col-xl-8 col-lg-12">
-              <div class="card mb-4">
-                <article class="card-body">
-                  <h5 class="card-title">Sale statistics</h5>
-                  <canvas id="myChart" height="120px"></canvas>
-                </article>
-              </div>
-              <div class="row">
-                <div class="col-lg-5">
-                  <div class="card mb-4">
-                    
-                  </div>
-                </div>
-            </div>
+      <div class="row">
+        <div class="chart-container" style="width: 100%; height: 400px; margin: 20px 0; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <!-- Add debug info -->
+            <div id="debugInfo" style="margin-bottom: 10px; color: #666;"></div>
+            <canvas id="salesChart"></canvas>
         </div>
+        
+        
+    
         <div class="col-lg-6">
             <div class="card card-body mb-4">
                 <article class="icontext">
@@ -219,5 +217,73 @@
          
        
       </section>
-      <!-- content-main end// -->
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+<script>
+    // Get the data from Django
+    const years = {{ years|safe }};
+    const sales = {{ sales|safe }};
+    
+    // Show debug info
+    document.getElementById('debugInfo').innerHTML = `
+        Data received - Years: ${JSON.stringify(years)}, Sales: ${JSON.stringify(sales)}
+    `;
+    
+    // Get the canvas element
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    
+    // Only create chart if we have data
+    if (years.length > 0 && sales.length > 0) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: years,
+                datasets: [{
+                    label: 'Yearly Sales',
+                    data: sales,
+                    backgroundColor: '#3b82f6',
+                    borderColor: '#2563eb',
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    barThickness: 'flex'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Yearly Sales Statistics',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Sales: $' + context.raw.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        document.getElementById('debugInfo').innerHTML += '<br>No data available to display chart.';
+    }
+</script>
      {% endblock %}

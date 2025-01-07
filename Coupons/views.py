@@ -4,6 +4,10 @@ from Coupons.models import coupons
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
+from django.core.paginator import Paginator
+
+
 
 
 
@@ -15,9 +19,19 @@ def list_coupons(request):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
         
+    search_query = request.GET.get('search','')
     alpha = coupons.objects.all()
+    if search_query:
+        alpha = alpha.filter(
+            Q(id__icontains=search_query)|
+            Q(code__icontains=search_query)
+        )
+    paginator = Paginator(alpha, 5)  
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     context = {
-        'coupons':alpha
+        'coupons':alpha,
+        'items': page_obj,
     }
     return render(request,'admin/coupon_list.html',context)
 

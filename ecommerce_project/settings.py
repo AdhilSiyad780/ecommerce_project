@@ -118,14 +118,20 @@ WSGI_APPLICATION = 'ecommerce_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.',
-        'NAME': 'evara',
-        'USER':'adhil',
-        'PASSWORD':'123',
-        'HOST':'LOCALHOST',
-        'PORT':'5432'
+        'ENGINE': 'django.db.backends.postgresql',  # Assuming you are using PostgreSQL
+        'NAME': os.getenv('DATABASE_NAME'),  # Get the database name from .env
+        'USER': os.getenv('DATABASE_USER'),  # Get the database user from .env
+        'PASSWORD': os.getenv('DATABASE_PASSWORD'),  # Get the database password from .env
+        'HOST': os.getenv('DATABASE_HOST'),  # Get the host from .env
+        'PORT': os.getenv('DATABASE_PORT'),  # Get the port from .env
     }
 }
 

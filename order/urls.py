@@ -19,6 +19,7 @@ urlpatterns = [
     path('admin_order_list/',views.admin_order_list,name='admin_order_list'),
     path('admin_order_details/<int:id>/',views.admin_order_details,name='admin_order_details'),
     path('change_order_status/<int:id>/',views.change_order_status,name='change_order_status'),
+    path('admin_review/',views.admin_review,name='admin_review')
 
      
 ]

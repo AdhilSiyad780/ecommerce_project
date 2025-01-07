@@ -45,6 +45,7 @@ def edit_catagory(request,id):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
     alpha = get_object_or_404(catagory,id=id)
+    item = catagory.objects.all()
     try:
         if request.method == 'POST':
             name = request.POST.get('name')
@@ -56,6 +57,9 @@ def edit_catagory(request,id):
                 alpha.description=description
             if image:
                 alpha.image = image
+            if offer>60:
+                error='offer should be less than 60%'
+                return render(request,'admin/catagory_list.html',{{'item':item,'createerror':error}})
             if offer:
                 alpha.offer = offer
             print('=====================================')

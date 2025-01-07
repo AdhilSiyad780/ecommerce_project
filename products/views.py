@@ -6,7 +6,6 @@ from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
-
 # Create your views here.
 def is_valid_image(image_file):
     """
@@ -18,9 +17,7 @@ def is_valid_image(image_file):
         return image_type in ['jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff']
     return False
 
-from django.shortcuts import render, redirect
-from django.core.paginator import Paginator
-from products.models import Products
+
 
 def product_list(request):
     # Restrict access to staff or authenticated users
@@ -39,7 +36,7 @@ def product_list(request):
     print(products)  # Debugging line
 
     # Paginate the product list (5 products per page)
-    paginator = Paginator(products, 5)
+    paginator = Paginator(products, 3)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 

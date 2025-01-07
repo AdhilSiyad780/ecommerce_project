@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils.timezone import now
+
 
 # Create your models here.
 from products.models import Products,SizeVariant
@@ -38,6 +40,8 @@ class AlOrderItem(models.Model):
     size_variant = models.ForeignKey(SizeVariant, on_delete=models.CASCADE)
     coupon = models.ForeignKey(coupons,on_delete=models.SET_NULL,null=True,blank=True )
     status = models.CharField(max_length=10,default='pending')
+    created_at = models.DateTimeField(auto_now_add=True) 
+    updated_at = models.DateTimeField(auto_now=True)
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"
  

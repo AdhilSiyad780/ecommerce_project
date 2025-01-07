@@ -7,6 +7,8 @@ from django.http import HttpResponse
 from datetime import datetime,timedelta
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
+from django.db.models import Q
+
 
 
 
@@ -14,6 +16,13 @@ from xhtml2pdf import pisa
 def transaction_list(request):
 
     alpha = transactions.objects.all()
+    search_query = request.GET.get('search','').strip()
+    if search_query:
+        alpha=alpha.filter(
+            Q(id__icontains=search_query)|
+            Q(user__username__icontains=search_query)
+        )
+
 
     
     return render(request,'admin/transaction.html',{'items':alpha})
@@ -113,5 +122,3 @@ def download_sales_pdf(request):
 
     return response
 
-def reviews(request):
-    return render(request,)

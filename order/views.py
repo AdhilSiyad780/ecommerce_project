@@ -115,6 +115,9 @@ def placeorder(request):
             )
             # Deduct stock and clear the cart
             _finalize_order(request, items, order)
+            # Delete the applied_coupon session
+            del request.session['applied_coupon']
+
             return render(request, 'success.html', {'order': order})
 
         else:
@@ -206,10 +209,13 @@ def razorpay_callback(request):
                 created_at=timezone.now(),
                 updated_at=timezone.now()
             )
+
             order = AlOrder.objects.get(razorpay_order_id=razorpay_order_id)
             order.status = 'completed'
             order.save()
             _finalize_order(request, items, order)
+            del request.session['applied_coupon']
+
             print('-----3333333333333333333333333333333333333333333333333333333333333333')
             return redirect('success', order_id=order.id)
 
@@ -337,7 +343,7 @@ def admin_order_list(request):
             Q(user__username__icontains=search_query) |
             Q(user__email__icontains=search_query)
         )
-    paginator = Paginator(alpha, 10)  # Show 10 orders per page
+    paginator = Paginator(alpha, 5)  
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
@@ -607,6 +613,8 @@ def add_address_checkout(request):
         return redirect('checkout')
     
     return redirect('checkout')
+def admin_review(request):
+    return render(request,'admin/page-reviews.html')
 
 def review(request,id,id2):
     print('=======================================')

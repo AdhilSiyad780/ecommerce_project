@@ -7,12 +7,13 @@
                         <h2 class="content-title card-title">Products List</h2>
                     </div>
                     <div class="col-search">
-                        <form class="searchform">
+                        <form class="searchform" method="get">
                             <div class="input-group">
-                                <input list="search_terms" type="text" class="form-control" placeholder="Search term" />
-                                <button class="btn btn-light bg" type="button"><i class="material-icons md-search"></i></button>
+                                <input list="search_terms" type="text" class="form-control" name="search" placeholder="Search term" value="{{ search_query }}" />
+                                <button class="btn btn-light bg" type="submit"><i class="material-icons md-search"></i></button>
                             </div>
                         </form>
+                        
                     </div>  
                     <div>
                       
@@ -128,17 +129,26 @@
                 <div class="pagination-area mt-30 mb-50">
                     <nav aria-label="Page navigation example">
                         <ul class="pagination justify-content-start">
-                            <li class="page-item active"><a class="page-link" href="#">01</a></li>
-                            <li class="page-item"><a class="page-link" href="#">02</a></li>
-                            <li class="page-item"><a class="page-link" href="#">03</a></li>
-                            <li class="page-item"><a class="page-link dot" href="#">...</a></li>
-                            <li class="page-item"><a class="page-link" href="#">16</a></li>
-                            <li class="page-item">
-                                <a class="page-link" href="#"><i class="material-icons md-chevron_right"></i></a>
-                            </li>
+                            {% for num in item.paginator.page_range %}
+                                {% if item.number == num %}
+                                    <li class="page-item active">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            {% if item.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ item.next_page_number }}"><i class="material-icons md-chevron_right"></i></a>
+                                </li>
+                            {% endif %}
                         </ul>
                     </nav>
                 </div>
+                
             </section>
              <!-- Modal for Adding Variant -->
 

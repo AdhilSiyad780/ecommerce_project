@@ -50,11 +50,15 @@
                     {% if order.status == 'delivered' %} 
                     <td style="text-align: center; padding: 8px;">
                         {% if item.status == 'pending' %}
-                        <button onclick="openReviewModal('{{ item.id }}')" style="padding: 6px 12px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Write Review</button>
-                        
-                        <form action="{% url 'individual_return' id=order.id id2=item.id%}">
-                        <button style="padding: 6px 12px; background-color: #af4c4c; color: white; border: none; border-radius: 5px; cursor: pointer;" >Return</button>
-                       </form>
+                        <button onclick="openReviewModal('{{ item.id }}')" style="padding: 6px 12px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; display: inline-block; margin-right: 10px;">
+                            Write Review
+                          </button>
+                          
+                          <form action="{% url 'individual_return' id=order.id id2=item.id %}" style="display: inline-block;">
+                            <button style="padding: 6px 12px; background-color: #af4c4c; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                              Return
+                            </button>
+                          </form>
                        {% else %}
                        <p style="color: red;">Returned</p>
                        {% endif %}

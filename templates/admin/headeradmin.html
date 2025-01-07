@@ -100,7 +100,7 @@
                   </div>
                 </li> -->
                 <li class="menu-item">
-                  <a class="menu-link" href="page-reviews.html">
+                  <a class="menu-link" href="{% url 'admin_review' %}">
                     <i class="icon material-icons md-comment"></i>
                     <span class="text">Reviews</span>
                   </a>
@@ -111,25 +111,10 @@
                     <span class="text">User</span>
                   </a>
                 </li>
-                <li class="menu-item">
-                  <a class="menu-link" disabled href="#">
-                    <i class="icon material-icons md-pie_chart"></i>
-                    <span class="text">Statistics</span>
-                  </a>
-                </li>
+            
               </ul>
               <hr />
               <ul class="menu-aside">
-                <li class="menu-item has-submenu">
-                  <a class="menu-link" href="#">
-                    <i class="icon material-icons md-settings"></i>
-                    <span class="text">Settings</span>
-                  </a>
-                  <div class="submenu">
-                    <a href="page-settings-1.html">Setting sample 1</a>
-                    <a href="page-settings-2.html">Setting sample 2</a>
-                  </div>
-                </li>
                 <li class="menu-item">
                   <a class="menu-link" href="{% url 'admin_logout' %}">
                     <i class="icon material-icons md-local_offer"></i>
