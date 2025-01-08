@@ -60,23 +60,6 @@
     .payment-container button:hover {
       background-color: #e05a3c;
     }
-
-    .payment-container img {
-      max-width: 100px;
-      margin: 0 auto 20px auto;
-      display: block;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 500px) {
-      .payment-container {
-        padding: 20px;
-      }
-
-      .payment-container h1 {
-        font-size: 1.5rem;
-      }
-    }
   </style>
 </head>
 
@@ -89,56 +72,53 @@
   </div>
 
   <script>
-  document.getElementById('pay-now').onclick = function () {
-  var options = {
-    "key": "{{ razorpay_key }}", // Razorpay key from backend
-    "amount": "{{ amount }}", // Amount in paise
-    "currency": "INR",
-    "name": "Evara",
-    "description": "Purchase Description",
-    "image": "user/img/logo.svg", // Optional
-    "order_id": "{{ razorpay_order_id }}", // Razorpay Order ID from backend
-    "handler": function (response) {
-      // Send the payment details back to your server
-      fetch("{% url 'razorpay_callback' %}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "X-CSRFToken": "{{ csrf_token }}" // Ensure CSRF token is correctly passed
-        },
-        body: new URLSearchParams({
-          "razorpay_order_id": response.razorpay_order_id,
-          "razorpay_payment_id": response.razorpay_payment_id,
-          "razorpay_signature": response.razorpay_signature
-        })
-      })
-      .then(response => {
-        if (response.redirected) {
-          // Handle redirection
-          window.location.href = response.url;
-        } else {
-          alert("An error occurred. Please try again.");
-        }
-      })
-      .catch(error => {
-        console.error(error);
-        alert("An error occurred. Please try again.");
-      });
-    },
-    "prefill": {
-      "name": "{{ user.get_full_name }}", // Optional
-      "email": "{{ user.email }}", // Optional
-      "contact": "{{ user_contact }}" // Optional
-    },
-    "theme": {
-      "color": "#F37254" // Customize button color
-    }
-  };
+    document.getElementById('pay-now').onclick = function() {
+        var options = {
+            "key": "{{ razorpay_key }}",
+            "amount": "{{ amount }}", // Amount in paise
+            "currency": "INR",
+            "name": "Your Company",
+            "description": "Purchase Description",
+            "order_id": "{{ razorpay_order_id }}",
+            "handler": function(response) {
+                fetch("{% url 'razorpay_callback' id=order.id %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-CSRFToken": "{{ csrf_token }}" 
+                    },
+                    body: new URLSearchParams({
+                        "razorpay_order_id": response.razorpay_order_id,
+                        "razorpay_payment_id": response.razorpay_payment_id,
+                        "razorpay_signature": response.razorpay_signature
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        window.location.href = "{% url 'failure' id=order.id %}";
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    window.location.href = "{% url 'failure' id=order.id %}";
+                });
+            },
+            "prefill": {
+                "name": "{{ user.get_full_name }}",
+                "email": "{{ user.email }}",
+                "contact": "{{ user_contact }}"
+            },
+            "theme": {
+                "color": "#F37254"
+            }
+        };
 
-  var rzp = new Razorpay(options);
-  rzp.open();
-};
-
+        var rzp = new Razorpay(options);
+        rzp.open();
+    };
   </script>
 </body>
 </html>

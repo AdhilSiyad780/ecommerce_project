@@ -200,6 +200,7 @@
         </div>
         
         
+        
     
         <div class="col-lg-6">
             <div class="card card-body mb-4">
@@ -207,6 +208,9 @@
                     <div class="text">
                         <h6 class="mb-1 card-title">Max-Selling Product</h6>
                         <span>{{ max_selling_product.product__name }}</span>
+                        <div>
+                            <img src="{{ max_selling_product.product.image1.url }}" alt="">
+                        </div>
                         <span class="text-sm">Quantity Sold: {{ max_selling_product.total_quantity }}</span>
                     </div>
                 </article>
@@ -221,25 +225,26 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
 <script>
     // Get the data from Django
-    const years = {{ years|safe }};
+    const months = {{ months|safe }};
     const sales = {{ sales|safe }};
+    const currentYear = {{ current_year }};
     
     // Show debug info
     document.getElementById('debugInfo').innerHTML = `
-        Data received - Years: ${JSON.stringify(years)}, Sales: ${JSON.stringify(sales)}
+        Data received - Year: ${currentYear}, Sales: ${JSON.stringify(sales)}
     `;
     
     // Get the canvas element
     const ctx = document.getElementById('salesChart').getContext('2d');
     
     // Only create chart if we have data
-    if (years.length > 0 && sales.length > 0) {
+    if (months.length > 0 && sales.length > 0) {
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: years,
+                labels: months,
                 datasets: [{
-                    label: 'Yearly Sales',
+                    label: `Monthly Sales ${currentYear}`,
                     data: sales,
                     backgroundColor: '#3b82f6',
                     borderColor: '#2563eb',
@@ -257,7 +262,7 @@
                     },
                     title: {
                         display: true,
-                        text: 'Yearly Sales Statistics',
+                        text: `Monthly Sales Statistics - ${currentYear}`,
                         font: {
                             size: 16
                         }

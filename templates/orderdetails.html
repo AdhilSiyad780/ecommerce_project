@@ -7,6 +7,13 @@
     <h1 style="font-size: 24px; color: #333; text-align: center; margin-bottom: 20px;">Order Details</h1>
 {% if order %}
     <!-- Order Summary -->
+    <div style="text-align: right; margin-bottom: 10px;">
+        <a href="{% url 'invoice_download' id=order.id %}" 
+           style="text-decoration: none; color: #007BFF; font-size: 16px;">
+           Download Invoice
+        </a>
+    </div>
+
     <div style="background: #ffffff; border: 1px solid #eaeaea; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
         <h2 style="font-size: 20px; color: #555; margin-bottom: 10px;">Order Summary</h2>
         <p style="font-size: 16px; margin: 5px 0;">Order ID: <strong>#{{ order.id }}</strong></p>
@@ -112,10 +119,11 @@
             </tbody>
         </table>
     </div>
-
-    <!-- Cancel Order Button (Only visible if order is pending) -->
-    {% if order.status != 'delivered' and order.status != 'canceled' %}
     <div style="text-align: center; margin-top: 20px;">
+    <!-- Cancel Order Button (Only visible if order is pending) -->
+     
+    {% if order.status != 'delivered' and order.status != 'canceled' %}
+    
             <form action="{% url 'cancel_order' id=order.id %}" method="post">
                 {% csrf_token %}
                 <button type="submit" style="padding: 10px 20px; font-size: 16px; background-color: #FF0000; color: white; border: none; border-radius: 5px; cursor: pointer;">

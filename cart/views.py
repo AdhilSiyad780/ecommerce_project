@@ -184,6 +184,7 @@ from django.http import JsonResponse
 def chectout(request):
     if not request.user.is_authenticated:
         return redirect('login_user')
+    
 
     cart = Cart.objects.filter(user=request.user).first()
 
@@ -207,8 +208,19 @@ def chectout(request):
     cart_total = items.annotate(
         item_total=F('product__offer') * F('quantity')
     ).aggregate(total=Sum('item_total'))['total'] or 0  # Defa₹ult to 0 if no items
-    applied_coupon=request.session.get('applied_coupon',False)
-
+    applied_coupon = request.session.get('applied_coupon', None)
+    coupon = None
+    if applied_coupon:
+        coupon = get_object_or_404(coupons,id=applied_coupon['id'])
+        print('========-=================-==================================')
+        if coupon:
+            if float(coupon.min_purchase_amount)>(cart_total+150):
+                del request.session['applied_coupon']
+                print('=====================           ====================        ===================         ===================')
+                messages.error(request, 'Please add more items to the apply this coupon')
+                return redirect('checkout')
+    
+    
     
     if cart_total==0:
         return redirect('cart')
@@ -217,11 +229,9 @@ def chectout(request):
 
         discount = cart_total * (Decimal(applied_coupon['discount_value']) / Decimal(100))
         cart_total-=discount
-    try:
-        Coupons = coupons.objects.all()
-    except Exception as e:
-        Coupons=None
-        print(f'error : {e}')
+    passcoupon=coupons.objects.filter(usage_limit__gt=0)
+
+    
 
     # Context for the template
     context = {
@@ -229,7 +239,7 @@ def chectout(request):
         'address': address,
         'cart_item': cart_total+150,
         'sub_total':cart_total,
-        'coupons':Coupons,
+        'coupons':passcoupon,
         'applied_coupon':applied_coupon['code'] if applied_coupon else ''
     }
 

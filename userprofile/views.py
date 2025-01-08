@@ -38,7 +38,7 @@ def userprofile(request):
         return redirect('login_user')
     print('============================================================')
     user = request.user
-    details = AlOrder.objects.filter(user=request.user).all()
+    details = AlOrder.objects.filter(user=request.user).order_by('-id')
 
     address = useraddress.objects.filter(user=user).all()
     thewallet = wallet.objects.filter(user=request.user).first()

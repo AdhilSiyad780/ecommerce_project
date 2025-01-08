@@ -4,6 +4,7 @@ from Catagory.models import catagory
 import imghdr
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from products.models import Products
 
 
 # Create your views here.
@@ -26,7 +27,7 @@ def product_list(request):
     
     # Fetch the search term from GET parameters
     search_query = request.GET.get('search', '').strip()
-    products = Products.objects.all()
+    products = Products.objects.order_by('-id').all()
 
     # Filter products based on the search query
     if search_query:
@@ -36,7 +37,7 @@ def product_list(request):
     print(products)  # Debugging line
 
     # Paginate the product list (5 products per page)
-    paginator = Paginator(products, 3)
+    paginator = Paginator(products, 6)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -48,55 +49,71 @@ def product_list(request):
 
 
     
-    
-
-def  edit_product(request,id):
-    if request.user.is_staff==False or not request.user.is_authenticated:
+def edit_product(request, id):
+    if not request.user.is_staff or not request.user.is_authenticated:
         return redirect('adminlogin')
-    alpha = get_object_or_404(Products,id=id)
-    cata = catagory.objects.filter(is_active = True)
-    
+
+    alpha = get_object_or_404(Products, id=id)
+    cata = catagory.objects.filter(is_active=True)
+    error = ''
+
     if request.method == 'POST':
-        
         name = request.POST.get('name')
         description = request.POST.get('description')
         offer = request.POST.get('offer')
         price = request.POST.get('price')
         catagory_id = request.POST.get('catagory_id')
-        error = ''
+
+        # Update fields with validation
         if name:
             alpha.name = name
         if description:
             alpha.description = description
+         
+        if offer and price:
+            offer=float(offer)
+            price=float(price)
+            if offer > price or price <offer:
+                error='the price should be greater than offer'
+            alpha.offer=offer
+            alpha.price=price
+
         if offer:
-            alpha.offer = offer
+            offer = float(offer)
+            if offer>alpha.price :
+                error = 'offer should be lesser than price'
+            alpha.offer=offer
         if price:
-            alpha.price = price
-        
+            price = float(price)
+            if price<alpha.price :
+                error = 'price should be lesser than offer'
+            alpha.price=price
+
+            
+
         if catagory_id:
-            Catagory = catagory.objects.get(id = catagory_id)
-            alpha.catagory = Catagory
-        image1 = request.FILES.get('image1')
-        image2 = request.FILES.get('image2') 
-        image3 = request.FILES.get('image3')
-        if image1:
-            if is_valid_image(image1):
-                alpha.image1 = image1
-            else:
-                error = 'image 1 is invalid'
-        if image2:
-            if is_valid_image(image2):
-                alpha.image2 = image2
-            else:
-                error = 'image 2 is invalid'
-        if image3:
-            if is_valid_image(image3):
-                alpha.image3 = image3
-            else:
-                error = 'image 3 is invalid'
-        alpha.save()
-        return redirect('product_list')
-    return render(request,'admin/edit_product.html',{'cata':cata,'item':alpha})
+            try:
+                Catagory = catagory.objects.get(id=catagory_id)
+                alpha.catagory = Catagory
+            except catagory.DoesNotExist:
+                error = 'Selected category does not exist. '
+
+        # Validate and update images
+        for img_field, label in [('image1', 'Image 1'), ('image2', 'Image 2'), ('image3', 'Image 3')]:
+            image = request.FILES.get(img_field)
+            if image:
+                if is_valid_image(image):
+                    setattr(alpha, img_field, image)
+                else:
+                    error += f'{label} is invalid. '
+
+        # Save if no errors
+        if not error:
+            alpha.save()
+            return redirect('product_list')
+
+    return render(request, 'admin/edit_product.html', {'cata': cata, 'item': alpha, 'error': error})
+
 
 def create_product(request):
     if request.user.is_staff==False or not request.user.is_authenticated:
@@ -126,7 +143,12 @@ def create_product(request):
                 error = "Three images should be included"
             if int(offer)<=0 or int(offer)>int(price) or offer is None:
                 error='enter a valid offer'
-            
+            if offer and price:
+                offer=float(offer)
+                price=float(price)
+                if offer > price or price <offer:
+                    error='the price should be greater than offer'
+
             if not  is_valid_image(image1):
                 error = 'First image is not in image format'
             if not  is_valid_image(image2):
@@ -278,6 +300,7 @@ def display_products(request):
         alpha = alpha.order_by('name')
     if sort == 'name_desc':
         alpha = alpha.order_by('-name')
+    
     
     page = request.GET.get('page', 1)  # Get the page number from the URL
     paginator = Paginator(alpha, 6)  # 12 products per page

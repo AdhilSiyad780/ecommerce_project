@@ -26,7 +26,7 @@ def create_catagory(request):
             description = request.POST.get('description')
             image = request.FILES.get('image')
             offer = request.POST.get('offer')
-            if offer>60:
+            if float(offer)>60:
                 error='offer should be less than 60%'
                 return render(request,'admin/catagory_list.html',{{'item':item,'createerror':error}})
 
@@ -34,8 +34,8 @@ def create_catagory(request):
             alpha.save()
             return redirect('catagory_list')
     except Exception  as e:
-        error = 'An error occured while creating'
-        return render(request,'admin/catagory_list.html',{{'item':item,'createerror':error}})
+        error = f'An error occured while creating {e}'
+        return render(request,'admin/catagory_list.html',{'item':item,'createerror':error})
     
     
     return render(request,'admin/catagory_list.html',{'item':item})
@@ -57,9 +57,10 @@ def edit_catagory(request,id):
                 alpha.description=description
             if image:
                 alpha.image = image
-            if offer>60:
+            if float(offer)>60:
                 error='offer should be less than 60%'
-                return render(request,'admin/catagory_list.html',{{'item':item,'createerror':error}})
+                print(error)
+                return render(request,'admin/edit_catagory.html',{'item':alpha,'createerror':error})
             if offer:
                 alpha.offer = offer
             print('=====================================')
@@ -67,7 +68,7 @@ def edit_catagory(request,id):
 
             return redirect('catagory_list')
     except Exception as e:
-        print('the error that occured is -- {e}')
+        print(f'the error that occured is -- {e}')
         
     
     return render(request,'admin/edit_catagory.html',{'item':alpha})

@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from products.models import Products,SizeVariant
 from django.contrib import messages
 from django.http import JsonResponse
-from cart.models import Cart
+from cart.models import Cart,Cartitems
 from cart.views import addcart
 
 # Create your views here.
@@ -88,8 +88,40 @@ def delete_wishlist(request,id):
 def wishlist_to_cart(request,id):
     if not request.user.is_authenticated:
         return redirect('login_user')
-    alpha=get_object_or_404(Wishlistitems,id=id)
-    addcart(request,alpha.product.id,alpha.size)
+    wishlistitem=get_object_or_404(Wishlistitems,id=id)
+    # addcart(request,alpha.product.id,alpha.size)
+    alpha = wishlistitem.product
+    user = request.user
+    size_variant = alpha.size_variant.filter(size=wishlistitem.size).first()
+    stock = size_variant.stock if size_variant else 0 
+    quantity = int(request.POST.get('quantity', 1))
+    if stock == 0:
+        messages.error(request, 'Product is out of stock')
+        return redirect('product_details', id)
+   
+    if quantity > stock:
+        messages.warning(request, f'Only {stock} items available. Adjusted to stock limit.')
+        quantity = stock
+    cart, created = Cart.objects.get_or_create(user=user)
+    
+    cart_item, created = Cartitems.objects.get_or_create(
+        cart=cart,
+        product=alpha,
+        size=wishlistitem.size,
+        defaults={'quantity': quantity}
+    )
+    if cart_item.quantity<5:
+        if not created: 
+            if cart_item.quantity + quantity > stock:
+                cart_item.quantity = stock
+            else:
+                cart_item.quantity += quantity
+            cart_item.save()
+            messages.success(request, 'Product quantity updated in the cart')
+
+    
+        else:
+            messages.success(request, 'Product added to the cart successfully')
 
     return redirect('wishlist')
 

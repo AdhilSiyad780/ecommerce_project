@@ -7,14 +7,14 @@ import sweetify
 from django.db.models import Sum, Count, F,FloatField
 from order.models import AlOrder,AlOrderItem
 from django.db import models
-from django.db.models.functions import ExtractYear 
+from django.db.models.functions import ExtractYear,ExtractMonth
 from datetime import datetime
 import json
 from django.db.models import Q
 from django.core.paginator import Paginator
 
-
-
+from django.db.models import CharField
+from django.utils import timezone
 
 
 
@@ -45,7 +45,6 @@ def admin_logout(request):
     logout(request)
     return redirect('adminlogin')
 # ====================================================================================================================
-
 def admin_home(request):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
@@ -64,18 +63,33 @@ def admin_home(request):
         total_quantity=Sum('quantity')
     ).order_by('-total_quantity').first()
     
-    # Changed to yearly aggregation
+    # Get current year
+    current_year = timezone.now().year
+    
+    # Monthly sales aggregation
     sales_data = (
         AlOrderItem.objects
-        .annotate(year=ExtractYear('created_at'))  # Extract year instead of month
-        .values('year')
+        .filter(created_at__year=current_year)
+        .annotate(
+            month=ExtractMonth('created_at'),
+            month_name=ExtractMonth('created_at', output_field=CharField())
+        )
+        .values('month', 'month_name')
         .annotate(total_sales=Sum('price'))
-        .order_by('year')
+        .order_by('month')
     )
     
-    # Convert to list of years and sales
-    years = [str(item['year']) for item in sales_data]  # Convert year to string
-    sales = [float(item['total_sales']) for item in sales_data]
+    # Initialize all months with zero sales
+    all_months = {i: 0 for i in range(1, 13)}
+    
+    # Fill in actual sales data
+    for item in sales_data:
+        all_months[item['month']] = float(item['total_sales'])
+    
+    # Create lists for chart
+    months = ['January', 'February', 'March', 'April', 'May', 'June', 
+              'July', 'August', 'September', 'October', 'November', 'December']
+    sales = [all_months[i] for i in range(1, 13)]
     
     context = {
         "total_orders": total_orders,
@@ -83,8 +97,9 @@ def admin_home(request):
         "total_discount": total_discount,
         "max_selling_product": max_selling_product,
         "total_users": total_users,
-        'years': json.dumps(years), 
+        'months': json.dumps(months),
         'sales': json.dumps(sales),
+        'current_year': current_year,
     }
     
     return render(request, 'admin/indexadmin.html', context)

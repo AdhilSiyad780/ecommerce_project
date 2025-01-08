@@ -23,6 +23,8 @@ from Coupons.models import coupons,wallet
 from transaction.models import transactions
 from django.db.models import Q
 from django.core.paginator import Paginator
+from django.urls import reverse
+
 
 
 
@@ -32,6 +34,7 @@ from django.core.paginator import Paginator
 
 
 def placeorder(request):
+    
     if not request.user.is_authenticated:
         return redirect('login_user')
     if request.method == 'POST':
@@ -56,13 +59,23 @@ def placeorder(request):
         # Calculate the cart total
         cart_total =  items.annotate(
         item_total=F('product__offer') * F('quantity')
-    ).aggregate(total=Sum('item_total'))['total'] or 0
+          ).aggregate(total=Sum('item_total'))['total'] or 0
         applied_coupon = request.session.get('applied_coupon', None)
+        coupon = None
+        if applied_coupon:
+            coupon = get_object_or_404(coupons,id=applied_coupon['id'])
+        print('========-=================-==================================')
+        if coupon:
+            if float(coupon.min_purchase_amount)>(cart_total+150):
+                del request.session['applied_coupon']
+                print('=====================           ====================        ===================         ===================')
+                messages.error(request, 'Please add more items to the apply this coupon')
+                return redirect('checkout')
         if applied_coupon:
             coupon_obj = coupons.objects.get(id=applied_coupon['id'])
             discount = cart_total * (Decimal(applied_coupon['discount_value']) / Decimal(100))
             cart_total -= discount
-
+            
         # Get the selected shipping address
         shipping_address = useraddress.objects.filter(id=address_id, user=request.user).first()
         if not shipping_address:
@@ -75,30 +88,49 @@ def placeorder(request):
 
         # Razorpay integration for online payment
         if payment_type == 'razorpay':
+            order = AlOrder.objects.create(
+                user=request.user,
+                address=shipping_address,
+                payment_method=payment_type,
+                total_price=cart_total+150,
+                coupon = coupon_obj,
+                status='Failed',
+                created_at=timezone.now(),
+                updated_at=timezone.now()
+            )
+            
+
             try:
                 # Initialize Razorpay client
                 client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
                 # Create Razorpay order
+                # In placeorder view
                 razorpay_order = client.order.create({
-                    'amount': int((cart_total + 150) * 100),  # Convert to paisa
-                    'currency': 'INR',
-                    'payment_capture': '1',  # Auto-capture payment
-                })
+                'amount': int((cart_total + 150) * 100),  # Amount in paisa
+                'currency': 'INR',
+                'payment_capture': '1',
+                 })
+
                 # Save order details locally
                 request.session['razorpay_order_id'] = razorpay_order['id']
                 request.session['address_selected'] = address_id
 
                 print('2222222222222222222222222222222222222222')
-
+                success,error = _finalize_order(request, items, order)
+                if not success:
+                    messages.error(request,error)
+                    return redirect('checkout')
                 return render(request, 'payment_page.html', {
                     'razorpay_order_id': razorpay_order['id'],
                     'razorpay_key': settings.RAZORPAY_KEY_ID,
                     'amount': cart_total+150,
                     'user_email': request.user.email,
                     'user_contact': address_id,  
+                    'order':order,
                 })
             except Exception as e:
+                AlOrder.objects.filter(id=order.id).delete()
                 messages.error(request, f"Error creating Razorpay order: {str(e)}")
                 return redirect('checkout')
          
@@ -114,9 +146,27 @@ def placeorder(request):
                 updated_at=timezone.now()
             )
             # Deduct stock and clear the cart
-            _finalize_order(request, items, order)
+            
             # Delete the applied_coupon session
-            del request.session['applied_coupon']
+            
+            if order.coupon:
+                try:
+                    
+                    if order.coupon.usage_limit>0:
+                        order.coupon.usage_limit-=1
+                        order.coupon.save()
+                        del request.session['applied_coupon']
+                    else:
+                        AlOrder.objects.filter(id=order.id).delete()
+                        raise ValueError("Coupon usage limit has been exceeded.")
+                except:
+                    raise ValueError("Coupon usage limit has  exceeded.")
+                
+                    
+            success,error = _finalize_order(request, items, order)
+            if not success:
+                messages.error(request,error)
+                return redirect('checkout')
 
             return render(request, 'success.html', {'order': order})
 
@@ -128,15 +178,21 @@ def placeorder(request):
 
 
 def _finalize_order(request, items, order):
+    print("this is _finalize_order func")
     """Helper function to finalize the order: deduct stock and clear cart."""
     try:
         with transaction.atomic():
             for item in items:
+                print('========================= product reached')
                 product = item.product
                 size_variant = product.size_variant.filter(size=item.size).first()
                 if size_variant:
+                    print('========================================pri')
                     if size_variant.stock < item.quantity:
-                        raise ValueError(f"Not enough stock for {product.name} - {size_variant.size}")
+                        print('================================')
+                        error = f"Not enough stock for {product.name} - {size_variant.size}"
+                        messages.error(request,f'{error}')
+                        return False,error
                     size_variant.stock -= item.quantity
                     size_variant.save()
                 AlOrderItem.objects.create(
@@ -146,19 +202,21 @@ def _finalize_order(request, items, order):
                     price=product.price,
                     size_variant=size_variant,
                 )
+                print('========================================product added')
             # Clear cart
                 Cart.objects.filter(user=request.user).delete()
                 print('cart is deleted======================================================')
-    except Exception as e:
-        raise e
+        return True, None 
+    except Exception as error:
+        return False,error
 
 
-from django.views.decorators.csrf import csrf_exempt
 
-@csrf_exempt
-def razorpay_callback(request):
+def razorpay_callback(request,id):
+    print("this is razorpay_callback func")
     if not request.user.is_authenticated:
         return redirect('login_user')
+    order = get_object_or_404(AlOrder,id=id)
     if request.method == 'POST':
         print('===============================sdgg===============asddgg==================')
         client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
@@ -182,55 +240,41 @@ def razorpay_callback(request):
             gama = Cart.objects.filter(user=request.user).first()
 
             items = Cartitems.objects.filter(cart=gama)
-            cart_total = cart_total_cal(request)
-            applied_coupon = request.session.get('applied_coupon', None)
-            coupon_obj=None
-            if applied_coupon:
-                coupon_obj = coupons.objects.get(id=applied_coupon['id'])
-                discount = cart_total * (Decimal(applied_coupon['discount_value']) / Decimal(100))
-                cart_total -= discount  # Replace with your cart total logic
-            address_selected = request.session.get('address_selected')
-            
-            shipping_address = useraddress.objects.filter(id=address_selected, user=request.user).first()
-            print(address_selected,shipping_address)
-            if not shipping_address:
-                messages.error(request,'a adress problem')
-                return redirect('checkout')
-            
-            # Create the order only after successful payment
-            order = AlOrder.objects.create(
-                user=request.user,
-                address=shipping_address,
-                payment_method='razorpay',
-                total_price=cart_total+150,
-                razorpay_order_id=razorpay_order_id,
-                coupon=coupon_obj,
-                status='completed',  # Mark as completed
-                created_at=timezone.now(),
-                updated_at=timezone.now()
-            )
 
-            order = AlOrder.objects.get(razorpay_order_id=razorpay_order_id)
+            
+            
+           
+            order.razorpay_order_id=razorpay_order_id
+            print('razorpay_order_id have been asigned')
             order.status = 'completed'
+            print('order status changed to completed')
             order.save()
-            _finalize_order(request, items, order)
-            del request.session['applied_coupon']
+            print('deleted coupon')
 
             print('-----3333333333333333333333333333333333333333333333333333333333333333')
-            return redirect('success', order_id=order.id)
+            return JsonResponse({"status": "success", "redirect_url": reverse('success', args=[order.id])})
+
 
         except Exception as e:
-            print(e)
-            return render(request, 'failure.html', {'error': str(e)})
+            print(f"Error in Razorpay verification: {e}")
+            # Optionally delete the order
+            AlOrder.objects.filter(id=order.id).delete()
+            return JsonResponse({"status": "failure", "error": str(e)})
 
     return redirect('checkout')
 def success(request,order_id):
+    print("this is success page")
     if not request.user.is_authenticated:
         return redirect('login_user')
     order = AlOrder.objects.get(id=order_id)
     return render(request,'success.html',{'order':order})
-def failure(request):
-
+def failure(request,id):
+    print("this is failure page")
+    try:
+        order = get_object_or_404(AlOrder,id=id)
+        AlOrder.objects.filter(id=order.id).delete()
+    except Exception as e :
+        print(f'failure_page = {e}')
     return render(request,'failure.html')
 
 
@@ -251,6 +295,11 @@ def apply_coupon(request):
                     print('=================================8798==========================')
                     messages.error(request,'Add more item for applying this coupon')
                     return redirect('checkout')
+                if coupon.usage_limit==0:
+                    messages.error(request,'The coupon limit expired')
+                    return redirect('checkout')
+                
+                
                 request.session['applied_coupon']={
                     'id':coupon.id,
                 'code': coupon.code,
@@ -309,7 +358,7 @@ def  cancel_order(request, id):
                         # Increase the stock by the quantity in the order
                         size_variant.stock += item.quantity
                         size_variant.save()
-                if order.status=='pending':
+                if order.status=='completed':
                     thewallet, created = wallet.objects.get_or_create(user=request.user, defaults={'balance': Decimal('0')})
                     thewallet.balance += order.total_price
                     thewallet.save()
@@ -336,7 +385,7 @@ def admin_order_list(request):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
     search_query = request.GET.get('search', '').strip()
-    alpha = AlOrder.objects.all()
+    alpha = AlOrder.objects.order_by('-id').all()
     if search_query:
         alpha = alpha.filter(
             Q(id__icontains=search_query) |
@@ -371,6 +420,10 @@ def indiviudalcancel(request,id,id2):
     order = get_object_or_404(AlOrder,id=id)
     item = get_object_or_404(AlOrderItem,id=id2)
     items = AlOrderItem.objects.filter(order=order).all()
+    if (items.filter(status='cancelled').count())+1==items.count():
+        order.status='canceled'
+    print((items.filter(status='cancelled').count()))
+    print(items.count())
    
     if order.status == 'completed' :
         cart = items.annotate(
@@ -382,10 +435,11 @@ def indiviudalcancel(request,id,id2):
             print(f' discount: {discount}')
        
             total_quantity = AlOrderItem.objects.filter(order=order).aggregate(Sum('quantity'))['quantity__sum']
+            
             print(f'total_quantity{total_quantity}')
             single = discount/total_quantity
             print(f'single{single}')
-            reductable_amount = item.product.offer*item.quantity-item.quantity*single
+            reductable_amount = (item.product.offer*item.quantity)-(item.quantity*single)
             print(f'reductable_amount{reductable_amount}')
 
             
@@ -394,7 +448,6 @@ def indiviudalcancel(request,id,id2):
             if size_variant:
                         # Increase the stock by the quantity in the order
                 size_variant.stock += item.quantity
-                item.quantity=0
                 size_variant.save()
                 item.save()
             
@@ -416,14 +469,13 @@ def indiviudalcancel(request,id,id2):
             if size_variant:
                         # Increase the stock by the quantity in the order
                 size_variant.stock += item.quantity
-                item.quantity=0
                 size_variant.save()
                 item.save()
             print('=============================================================')
             order.total_price-=reductable_amount
             
         
-    if order.status == 'pending':
+    if order.status == 'pending' or order.status == 'canceled':
         if order.coupon:
             cart = items.annotate(
         item_total=F('product__offer') * F('quantity')
@@ -443,7 +495,6 @@ def indiviudalcancel(request,id,id2):
             if size_variant:
                         # Increase the stock by the quantity in the order
                 size_variant.stock += item.quantity
-                item.quantity=0
                 size_variant.save()
                 item.save()
         else:
@@ -451,22 +502,15 @@ def indiviudalcancel(request,id,id2):
             if size_variant:
                         # Increase the stock by the quantity in the order
                 size_variant.stock += item.quantity
-                item.quantity=0
                 size_variant.save()
                 item.save()
             order.total_price-=item.product.offer
              
 
-    if order.total_price<150 and order.status == 'completed':
-        thewallet, created = wallet.objects.get_or_create(user=request.user, defaults={'balance': Decimal('0')})
-        thewallet.balance +=14
-        thewallet.save()
-        order.total_price=0
+   
     if order.total_price<150:
         order.total_price=0
     
-    if items.filter(status='pending').count()==0:
-        order.status='cancelled'
     order.save()
     item.status='cancelled'
     item.save()
@@ -501,7 +545,6 @@ def individual_return(request,id,id2):
         if size_variant:
                         # Increase the stock by the quantity in the order
             size_variant.stock += item.quantity
-            item.quantity=0
             size_variant.save()
             item.status='returned'
             item.save()
@@ -524,7 +567,6 @@ def individual_return(request,id,id2):
         if size_variant:
                         # Increase the stock by the quantity in the order
             size_variant.stock += item.quantity
-            item.quantity=0
             size_variant.save()
             item.status='returned'
             item.save()

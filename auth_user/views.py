@@ -22,6 +22,7 @@ def otp_generetor():
     return random.randint(100000,999999)
 
 def send_otp_mail(otp,email):
+    print(otp)
     try:
         message = 'OTP to login'
         subject = f'you otp to login is {otp}'

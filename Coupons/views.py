@@ -39,6 +39,7 @@ def create_coupons(request):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
     error = ''
+    print('======================================')
     if request.method=='POST':
         code=request.POST.get('code')
         discount = request.POST.get('discount')
@@ -48,6 +49,8 @@ def create_coupons(request):
         limit = request.POST.get('limit')
         if any(not item for item in [code,discount,min_purchase,valid_from,valid_to,limit]):
             error='not field can be empty'
+            messages.error(request, error)
+            return redirect('list_coupons')
         try:
             valid_from_date = datetime.strptime(valid_from,"%Y-%m-%d")
             valid_to_date = datetime.strptime(valid_to,"%Y-%m-%d")
@@ -55,29 +58,43 @@ def create_coupons(request):
                 error='Date should be correct'
         except ValueError:
             error = 'Invalid date format'
-       
-        if not (any(char.isdigit()) for char in code) and (any(char.isalpha() for char in code)):
-            error='code should be combination  of both number and charactar'
+        print('11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111')
+        if not (any(char.isdigit() for char in code) and any(char.isalpha() for char in code)):
+            messages.error(request, 'Code should be a combination of both numbers and characters.')
+            return redirect('list_coupons')
         if not discount.isdigit:
+            
             error = 'discount should be a number'
-        if not discount.isdigit():
-            error = 'the discount should be less than 50'
+        print('22222222222222222222222222222222222222222222222222222222222222222222222222222222222')
+        try:
+            new_discount = Decimal(discount)
+            if new_discount < 0:
+                messages.error(request, 'Discount should not be less than zero.')
+                return redirect('list_coupons')
+            if new_discount > 50:
+                messages.error(request, 'Discount should be less than or equal to 50.')
+                return redirect('list_coupons')
+        except InvalidOperation:
+            messages.error(request, 'Invalid discount value.')
+            return redirect('list_coupons')
+        if float(discount)<0:
+            error = 'the discount should not be lesser than zero'
+            messages.error(request, error)
+            return redirect('list_coupons')
+        
+            
         try:
             if int(limit) <= 0:
                 error = 'limit should be greater than 1'
         except ValueError:
             error='limit is empty'
-        try:
-            newdiscount = Decimal(discount)
-        except InvalidOperation:
-            error='discount cant be empty'
-        
-        if error:
-            
-            messages.error(request,error)
+            messages.error(request, error)
             return redirect('list_coupons')
         
-        coupons.objects.create(code=code,discount_value=newdiscount,min_purchase_amount=min_purchase,valid_from=valid_from,valid_to=valid_to,usage_limit=limit)
+        
+        
+        print('===================ccccccccccccccccccccccc===========================================')
+        # coupons.objects.create(code=code,discount_value=newdiscount,min_purchase_amount=min_purchase,valid_from=valid_from,valid_to=valid_to,usage_limit=limit)
         return redirect('list_coupons')
         
         
@@ -97,13 +114,14 @@ def edit_coupon(request,id):
         limit = request.POST.get('limit')
         if not (any(char.isdigit() for char in code) and any(char.isalpha() for char in code)):
             error='not field can be empty'
-        try:
-            valid_from_date = datetime.strptime(valid_from,"%Y-%m-%d")
-            valid_to_date = datetime.strptime(valid_to,"%Y-%m-%d")
-            if valid_from_date > valid_to_date:
-                error='Date should be correct'
-        except ValueError:
-            error = 'Invalid date format'
+        if valid_from or valid_to:
+            try:
+                valid_from_date = datetime.strptime(valid_from,"%Y-%m-%d")
+                valid_to_date = datetime.strptime(valid_to,"%Y-%m-%d")
+                if valid_from_date > valid_to_date:
+                    error='Date should be correct'
+            except ValueError:
+                error = 'Invalid date format'
        
         if not (any(char.isdigit()) for char in code) and (any(char.isalpha() for char in code)):
             error='code should be combination  of both number and charactar'
@@ -113,7 +131,7 @@ def edit_coupon(request,id):
         try:
             limit_int = int(limit)
             if limit_int <= 0:
-                error = 'Limit should be greater than 1'
+                error = 'Limit should be greater than 0'
         except ValueError:
                error = 'Limit should be a valid number'
 
@@ -126,12 +144,18 @@ def edit_coupon(request,id):
             
             messages.error(request,error)
             return redirect('edit_coupon',id)
-        coupon.code=code
-        coupon.discount_value=newdiscount
-        coupon.min_purchase_amount=min_purchase
-        coupon.valid_from=valid_from_date
-        coupon.valid_to=valid_to_date
-        coupon.usage_limit=limit
+        if code:
+            coupon.code=code
+        if newdiscount:
+            coupon.discount_value=newdiscount
+        if min_purchase:
+            coupon.min_purchase_amount=min_purchase
+        if valid_from:
+            coupon.valid_from=valid_from
+        if valid_to:
+            coupon.valid_to=valid_to
+        if limit: 
+            coupon.usage_limit=limit
         coupon.save()
         return redirect('list_coupons')
 
