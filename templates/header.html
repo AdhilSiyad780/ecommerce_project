@@ -9,6 +9,8 @@
        rel="stylesheet"
        href="https://cdn-uicons.flaticon.com/2.0.0/uicons-regular-straight/css/uicons-regular-straight.css"
      />
+       <link rel="icon" href="{% static 'assets/imgs/icons/favicon.ico' %}" type="image/x-icon" />
+
      
  
      <!--=============== SWIPER CSS ===============-->
@@ -16,13 +18,15 @@
        rel="stylesheet"
        href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"
      />
+     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
  
      <!--=============== CSS ====== =========-->
      <link rel="stylesheet" href="{% static 'user/css/styles.css' %}" />
      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
  
-     <title>{% block title %}Ecommerce Website {% endblock %} </title>
+     <title>{% block title %}Evara{% endblock %} </title>
 
 </head>
 <style>
@@ -98,18 +102,7 @@
               {% endif %}
             </ul>
             <form action="{% url 'display_products' %}" method="GET">
-            <div class="header__search">
-              <input
-                type="text"
-                name="search"
-                value="{{ search_term|default_if_none:'' }}" 
-                placeholder="Search For Items..."
-                class="form__input"
-              />
-              <button class="search__btn" type="submit">
-                <img src="{% static 'user/img/search.png' %}" alt="search icon"   />
-              </button>
-            </div>
+           
           </form>
           </div>
           <div class="header__user-actions">

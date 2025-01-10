@@ -462,13 +462,15 @@
                 title: 'Oops...',
                 text: '{{ message }}',
                 confirmButtonText: 'OK'
+                
             });
         {% elif message.tags == 'success' %}
             Swal.fire({
                 icon: 'success',  // Success icon
                 title: 'Success!',
                 text: '{{ message }}',
-                confirmButtonText: 'OK'
+                showConfirmButton: false
+                
             });
         {% endif %}
     {% endfor %}

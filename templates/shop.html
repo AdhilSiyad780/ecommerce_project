@@ -3,6 +3,68 @@
 
 {% block content %}
 <style>
+  .search-and-filter-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.header__search {
+  width: 300px;
+}
+
+.header__search-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.form__input {
+  width: 100%;
+  padding: 8px 35px 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.search__btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.search__btn img {
+  width: 20px;
+  height: 20px;
+}
+
+.filter-button {
+  padding: 10px 15px;
+  background: hsl(176, 88%, 27%);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .search-and-filter-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .header__search {
+    width: 100%;
+  }
+}
   /* Container for pagination */
   .pagination-container {
     display: flex;
@@ -165,7 +227,36 @@
 
   .filter-button:hover {
     background: #0056b3;
-  }
+    .header__search-wrapper {
+  display: flex;
+  justify-content: flex-end; /* Moves the search bar to the right */
+  margin-bottom: 20px; /* Add space below the search bar */
+}
+
+.header {
+  display: flex;
+  justify-content: space-between; /* Space between logo/navigation and search */
+  align-items: center; /* Vertically center all elements */
+  padding: 10px 20px;
+}
+
+.header__content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+/* Container section adjustments */
+.section--lg {
+  position: relative;
+  width: 100%;
+}
+
+
+
+
+
 </style>
 
 <!--=============== MAIN ===============-->
@@ -177,12 +268,42 @@
       <li><span class="breadcrumb__link">></span></li>
       <li><span class="breadcrumb__link">Shop</span></li>
     </ul>
+    
   </section>
 
   <!--=============== PRODUCTS SECTION WITH FILTER BUTTON ===============-->
   <section class="container section--lg">
+  <!-- Search Form -->
+  <div class="search-and-filter-container">
+    <!-- Search Form -->
+    <form method="GET" action="{% url 'display_products' %}" class="header__search">
+      <div class="header__search-wrapper">
+        <input
+          type="text"
+          name="search"
+          value="{{ request.GET.search }}" 
+          placeholder="Search products"
+          class="form__input"
+        />
+        <!-- Hidden filters -->
+        <input type="hidden" name="min_price" value="{{ request.GET.min_price }}">
+        <input type="hidden" name="sort" value="{{ request.GET.sort }}">
+        <input type="hidden" name="max_price" value="{{ request.GET.max_price }}">
+        <input type="hidden" name="category" value="{{ request.GET.category }}">
+        <input type="hidden" name="rating" value="{{ request.GET.rating }}">
+        <button class="search__btn" type="submit">
+          <img src="{% static 'user/img/search.png' %}" alt="search icon" />
+        </button>
+      </div>
+    </form>
+    
     <!-- Filter Button -->
     <button class="filter-button" id="filterButton">Filter</button>
+
+  </div>
+
+    <!-- Filter Button -->
+ 
 
     <div class="row">
       <!-- Sidebar -->
@@ -190,12 +311,15 @@
         <h4>Filter Products</h4>
         <form method="GET" action="{% url 'display_products' %}">
           <!-- Sort by Price -->
+          <input type="hidden" name="search" value="{{ request.GET.search }}">
+
+
           <div class="form-group">
             <label for="sort">Sort by Price</label>
             <select id="sort" name="sort">
               <option value="">Select</option>
-              <option value="low_to_high">Low to High</option>
-              <option value="high_to_low">High to Low</option>
+              <option value="low_to_high" {% if request.GET.sort == "low_to_high" %}selected{% endif %}>Low to High</option>
+              <option value="high_to_low" {% if request.GET.sort == "high_to_low" %}selected{% endif %} >High to Low</option>
               <option value="name_asc" {% if request.GET.sort == "name_asc" %}selected{% endif %}>Name: A to Z</option>
               <option value="name_desc" {% if request.GET.sort == "name_desc" %}selected{% endif %}>Name: Z to A</option>
             </select>
@@ -226,7 +350,7 @@
           </div>
 
           <!-- Rating -->
-          <div class="form-group">
+          <!-- <div class="form-group">
             <label for="rating">Rating</label>
             <select id="rating" name="rating">
               <option value="">All Ratings</option>
@@ -236,7 +360,7 @@
               <option value="2">2 Stars & Above</option>
               <option value="1">1 Star & Above</option>
             </select>
-          </div>
+          </div> -->
 
           <button type="submit" class="btn btn-primary">Apply Filters</button>
         </form>
@@ -247,6 +371,7 @@
 
       <!-- Products -->
       <div class="col-lg-12">
+        
         <section class="products">
           <p class="total__products">We found <span>{{ item|length }}</span> items for you!</p>
           <div class="products__container grid">
@@ -300,7 +425,18 @@
             <p>No products found.</p>
             {% endif %}
           </div>
-                      <!-- Pagination Controls -->
+                      <!-- Pagi <div class="header__search">
+              <input
+                type="text"
+                name="search"
+                value="{{ search_term|default_if_none:'' }}" 
+                placeholder="Search For Items..."
+                class="form__input"
+              />
+              <button class="search__btn" type="submit">
+                <img src="{% static 'user/img/search.png' %}" alt="search icon"   />
+              </button>
+            </div>nation Controls -->
          <!-- Pagination Controls -->
 <div class="pagination-container">
   <div class="pagination">

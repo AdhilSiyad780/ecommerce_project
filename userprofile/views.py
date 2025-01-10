@@ -13,6 +13,7 @@ from order.models import AlOrder
 from django.contrib import messages
 from Coupons.models import wallet,coupons
 from transaction.models import transactions
+from auth_user.models import Refferal
 
 
 
@@ -43,9 +44,10 @@ def userprofile(request):
     address = useraddress.objects.filter(user=user).all()
     thewallet = wallet.objects.filter(user=request.user).first()
     trans = transactions.objects.filter(user=request.user).order_by('-created_at')[:5]
+    referal_id = Refferal.objects.filter(user=request.user).first()
     print(thewallet)
     
-    return render(request,'userprofile.html',{'user':user,'address':address,'active_tab': 'dashboard','orderdetails':details,'wallet':thewallet,'trans':trans})
+    return render(request,'userprofile.html',{'user':user,'address':address,'active_tab': 'dashboard','orderdetails':details,'wallet':thewallet,'trans':trans,'ref':referal_id})
 
 def updateprofile(request):
     if not request.user.is_authenticated:

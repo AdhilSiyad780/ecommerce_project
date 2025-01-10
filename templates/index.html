@@ -167,12 +167,15 @@
             {% if item %}
             {% for val in item %}
            
-            <a href="shop.html" class="category__item swiper-slide">
+            <a href="" class="category__item swiper-slide">
               <img
                 src="{{val.image.url}}"
                 alt=""
                 class="category__img"
               />
+              <div style="align-items: center;">
+                <p style="color:black;">{{ val.offer }}% off</p>
+              </div>
               <h3 class="category__title">{{val.name }}</h3>
             </a>
             {% endfor %}

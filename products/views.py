@@ -198,11 +198,13 @@ def list_variant(request,product_id):
     # try:
     alpha = get_object_or_404(Products,id=product_id)
 
-    variant = SizeVariant.objects.filter(product=alpha.id)
+    variants = SizeVariant.objects.filter(product=alpha.id)
+     
+    paginator = Paginator(variants,3)
+    pagenumber = request.GET.get('page')
+    page_obj = paginator.get_page(pagenumber)
 
-  
-
-    return render(request,'admin/list_variant.html',{'item':variant,'product_id':passid},)
+    return render(request,'admin/list_variant.html',{'variants':variants,'product_id':passid,'item':page_obj })
 
 def create_variant(request,product_id):
     if request.user.is_staff==False or not request.user.is_authenticated:
@@ -300,6 +302,7 @@ def display_products(request):
         alpha = alpha.order_by('name')
     if sort == 'name_desc':
         alpha = alpha.order_by('-name')
+    print(search_term,'=====================================================================')
     
     
     page = request.GET.get('page', 1)  # Get the page number from the URL
@@ -311,7 +314,12 @@ def display_products(request):
     except EmptyPage:
         products = paginator.page(paginator.num_pages)  # If page is out of range, deliver last page
 
-    return render(request, 'shop.html', {'item': products, 'cata': cata})
+    return render(request, 'shop.html', {'item': products,
+                                          'cata': cata,
+                                          'search_term':search_term,
+                                          'sort':sort,
+                                          
+                                          })
 
 from django.db.models import Case, When
 

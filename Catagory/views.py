@@ -11,7 +11,7 @@ def catagory_list(request):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
 
-    item = catagory.objects.all()
+    item = catagory.objects.order_by('id').all()
 
     return render(request,'admin/catagory_list.html',{'item':item})
 

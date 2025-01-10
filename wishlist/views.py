@@ -110,6 +110,7 @@ def wishlist_to_cart(request,id):
         size=wishlistitem.size,
         defaults={'quantity': quantity}
     )
+    
     if cart_item.quantity<5:
         if not created: 
             if cart_item.quantity + quantity > stock:

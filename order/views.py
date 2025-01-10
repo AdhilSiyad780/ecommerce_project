@@ -57,9 +57,7 @@ def placeorder(request):
         items = Cartitems.objects.filter(cart=gama)
         coupon_obj = None
         # Calculate the cart total
-        cart_total =  items.annotate(
-        item_total=F('product__offer') * F('quantity')
-          ).aggregate(total=Sum('item_total'))['total'] or 0
+        cart_total =  cart_total_cal(request)
         applied_coupon = request.session.get('applied_coupon', None)
         coupon = None
         if applied_coupon:
@@ -426,9 +424,7 @@ def indiviudalcancel(request,id,id2):
     print(items.count())
    
     if order.status == 'completed' :
-        cart = items.annotate(
-        item_total=F('product__offer') * F('quantity')
-         ).aggregate(total=Sum('item_total'))['total'] or 0
+        cart = cart_total_cal(request)
         cart_total=cart+150
         if order.coupon:
             discount = cart_total * (Decimal(order.coupon.discount_value) / Decimal(100))
@@ -477,9 +473,7 @@ def indiviudalcancel(request,id,id2):
         
     if order.status == 'pending' or order.status == 'canceled':
         if order.coupon:
-            cart = items.annotate(
-        item_total=F('product__offer') * F('quantity')
-         ).aggregate(total=Sum('item_total'))['total'] or 0
+            cart = cart_total_cal(request)
             cart_total=cart+150
             discount = cart_total * (Decimal(order.coupon.discount_value) / Decimal(100))
             print(f' discount: {discount}')
@@ -524,9 +518,7 @@ def individual_return(request,id,id2):
     order = get_object_or_404(AlOrder,id=id)
     item = get_object_or_404(AlOrderItem,id=id2)
     items = AlOrderItem.objects.filter(order=order).all()
-    cart = items.annotate(
-        item_total=F('product__offer') * F('quantity')
-         ).aggregate(total=Sum('item_total'))['total'] or 0
+    cart = cart_total_cal(request)
     cart_total=cart+150
     if order.coupon:
         discount = cart_total * (Decimal(order.coupon.discount_value) / Decimal(100))

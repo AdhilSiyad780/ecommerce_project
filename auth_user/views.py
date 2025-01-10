@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,get_object_or_404
 from django.contrib.auth.models import User
 from django.utils import timezone
 import random
@@ -6,11 +6,15 @@ import sweetify
 from django.contrib.auth import authenticate, login, logout
 from datetime import timedelta
 from django.core.mail import send_mail
-from .models import OTP
+from .models import OTP,Refferal
 from Catagory.models import catagory
 from django.contrib import messages
 from products.models import Products
 from django.contrib.auth.hashers import make_password
+from Coupons.models import wallet
+from transaction.models import transactions
+from django.utils.crypto import get_random_string
+
 
 
 # Create your views here.
@@ -43,6 +47,7 @@ def signup(request):
         email = request.POST.get('email')
         pass1 = request.POST.get('pass1')
         pass2 = request.POST.get('pass2')
+        Refferal = request.POST.get('Refferal',None)
         
 
         if User.objects.filter(username=username).exists():
@@ -71,7 +76,7 @@ def signup(request):
             OTP.objects.update_or_create(email=email,defaults={'otp': otp, 'expires_at': expiry_time})
             error = {}
             
-            request.session['registration'] = {'username':username,'email':email,'password':pass1 }
+            request.session['registration'] = {'username':username,'email':email,'password':pass1 ,'Refferal':Refferal}
 
             
             if not send_otp_mail(otp,email):
@@ -114,12 +119,58 @@ def verify_otp(request, email):
                 })
             if str(otp_real.otp)==enter_otp:
 
-                user = User.objects.create_user(username=registration['username'],email=registration['email'],password=registration['password'])
+                user = User.objects.create_user(username=registration['username']
+                                                ,email=registration['email']
+                                                ,password=registration['password'])
+            
                 user.save()
+                login(request,user)
+                refferal_code=get_random_string(10).upper()
+                for val in range(1,30):
+                    if Refferal.objects.filter(refferal_code=refferal_code).exists():
+                        print('=================this refferal code already exist')
+                        refferal_code = get_random_string(10)
+                    break
+
+                ref=Refferal.objects.create(user=request.user,refferal_code=refferal_code)
+                print('=================referal created')
+                ref.save()
+
+
+
 
                 otp_real.delete()
+                reffer = registration['Refferal']
+                print(reffer,'==================refferal code=========================================================')
+                if reffer:
+                    try:
+                        print('11111111111111111111111111111111111111111111111111111111111111111111111111111111111')
+                        reffered_by_user_at = get_object_or_404(Refferal,refferal_code=reffer)
+                        reffered_by_user= reffered_by_user_at.user
+                        ref.reffered_by=reffered_by_user
+                        ref.save()
+
+                        print("22222222222222222222222222222222222222222222222222222222222222222222222222222")
+                        alwallet,created = wallet.objects.get_or_create(user=reffered_by_user)
+                        if not created:
+                            wallet.objects.create(user=reffered_by_user,balance=100)
+                            transactions.objects.create(user=reffered_by_user,status='Refferal',amount=100)
+                        else:
+                            alwallet.balance+=100
+                            transactions.objects.create(user=reffered_by_user,status='Refferal',amount=100)
+                            alwallet.save()
+
+                        wallet.objects.create(user=request.user,balance=100)
+                        transactions.objects.create(user=request.user,status='Refferal',amount=100)
+
+
+                        
+                    except Refferal.DoesNotExist:
+                        print('==============================error when refferal')
+                        pass
+
                 del request.session['registration']
-                login(request,user)
+                
 
                 return redirect('index')
             else:

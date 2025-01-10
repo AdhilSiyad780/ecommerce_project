@@ -2,7 +2,7 @@ from django.shortcuts import render,redirect
 from django.shortcuts import get_object_or_404
 from products.models import Products,SizeVariant
 from .models import Cart,Cartitems
-from django.db.models import F,Sum
+from django.db.models import F, Case, When, Value, FloatField, Sum
 from userprofile.models import useraddress
 from django.http import JsonResponse
 from django.contrib import messages
@@ -44,10 +44,7 @@ def cart(request):
             total_items = []  # Ensure total_items is reset in case of an error
         
         # Calculate the cart total
-        cart_total = items.annotate(
-            item_total=F('product__offer') * F('quantity')
-        ).aggregate(total=Sum('item_total'))['total'] or 0  # Default to 0 if total is None
-        
+        cart_total = cart_total_cal(request)
         # Populate total_items with cart item details
         for item in items:
             size_variant = item.product.size_variant.filter(size=item.size).first()
@@ -89,15 +86,20 @@ def addcart(request, id, size=None):
         size=size,
         defaults={'quantity': quantity}
     )
+
     
-    if not created: 
-        if cart_item.quantity < 5:
-            cart_item.quantity+=1
+    if cart_item.quantity<5:
+        if not created: 
+            if cart_item.quantity + quantity > stock:
+                cart_item.quantity = stock
+            else:
+                cart_item.quantity += quantity
             cart_item.save()
             messages.success(request, 'Product quantity updated in the cart')
+
     
-    else:
-        messages.success(request, 'Product added to the cart successfully')
+        else:
+            messages.error(request, 'Product added to the cart successfully')
 
     return redirect('product_details', id)
 
@@ -144,6 +146,7 @@ def update_cart(request, id):
         cart_item.save()
         
         # Recalculate cart total
+        
         cart_total = cart_total_cal(request)
         print(cart_item.quantity)
         return JsonResponse({
@@ -160,8 +163,21 @@ def cart_total_cal(request):
     cart = Cart.objects.filter(user=request.user).first()
     items = Cartitems.objects.filter(cart=cart)
     cart_total = items.annotate(
-        item_total=F('product__offer') * F('quantity')
-    ).aggregate(total=Sum('item_total'))['total'] or 0 
+    # Calculate the effective price based on product and category offers
+    effective_price=Case(
+        When(
+            product__catagory__offer__gt=0,  # Apply category offer if it exists
+            then=F('product__offer') * (1 - F('product__catagory__offer') / 100)  # Reduce the product offer by category discount
+        ),
+        default=F('product__offer'),  # Otherwise, use the product offer price
+        output_field=FloatField(),
+    ),
+    # Calculate the total for each item
+    item_total=F('effective_price') * F('quantity')
+    ).aggregate(
+    total=Sum('item_total')
+    )['total'] or 0  # Default to 0 if no items
+
     return cart_total
 
 
@@ -200,14 +216,18 @@ def chectout(request):
             return redirect('cart')
     # Fetch cart items
     items = Cartitems.objects.filter(cart=cart.id)
+    sub_total = cart_total = items.annotate(
+        item_total=F('product__price') * F('quantity')
+     ).aggregate(total=Sum('item_total'))['total'] or 0
 
     # Fetch user addresses
     address = useraddress.objects.filter(user=request.user)[:3]
 
     # Calculate the total
-    cart_total = items.annotate(
-        item_total=F('product__offer') * F('quantity')
-    ).aggregate(total=Sum('item_total'))['total'] or 0  # Defa₹ult to 0 if no items
+
+    cart_total = cart_total_cal(request)
+    cart_total =Decimal(cart_total)
+    total_discount = sub_total-cart_total
     applied_coupon = request.session.get('applied_coupon', None)
     coupon = None
     if applied_coupon:
@@ -224,11 +244,14 @@ def chectout(request):
     
     if cart_total==0:
         return redirect('cart')
+    discount = 0
     if applied_coupon:
         print('=============================================================================')
 
         discount = cart_total * (Decimal(applied_coupon['discount_value']) / Decimal(100))
         cart_total-=discount
+        total_discount+=discount
+        
     passcoupon=coupons.objects.filter(usage_limit__gt=0)
 
     
@@ -240,7 +263,10 @@ def chectout(request):
         'cart_item': cart_total+150,
         'sub_total':cart_total,
         'coupons':passcoupon,
-        'applied_coupon':applied_coupon['code'] if applied_coupon else ''
+        'applied_coupon':applied_coupon['code'] if applied_coupon else '',
+        'sub_total':sub_total,
+        'total_discount':total_discount,
+        'coupon_discount':discount,
     }
 
     return render(request, 'checkout.html', context)
