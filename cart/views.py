@@ -99,7 +99,7 @@ def addcart(request, id, size=None):
 
     
         else:
-            messages.error(request, 'Product added to the cart successfully')
+            messages.success(request, 'Product added to the cart successfully')
 
     return redirect('product_details', id)
 
@@ -203,9 +203,9 @@ def chectout(request):
     
 
     cart = Cart.objects.filter(user=request.user).first()
-
+    discount=0
     if not cart:
-        messages.error(request,'Cart is Empty')
+        messages.error(request,'Ciiscountart is Empty')
         return redirect('cart')
     cart_items = Cartitems.objects.filter(cart=cart)
     for item in cart_items:
@@ -226,6 +226,7 @@ def chectout(request):
     # Calculate the total
 
     cart_total = cart_total_cal(request)
+    print('cart total',cart_total)
     cart_total =Decimal(cart_total)
     total_discount = sub_total-cart_total
     applied_coupon = request.session.get('applied_coupon', None)
@@ -247,9 +248,10 @@ def chectout(request):
     discount = 0
     if applied_coupon:
         print('=============================================================================')
-
+        cart_total=Decimal(cart_total)
         discount = cart_total * (Decimal(applied_coupon['discount_value']) / Decimal(100))
         cart_total-=discount
+        print('after discount',cart_total)
         total_discount+=discount
         
     passcoupon=coupons.objects.filter(usage_limit__gt=0)

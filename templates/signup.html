@@ -41,7 +41,7 @@
               value="{{ username|default:'' }}" 
             />
             {% if usererror %}
-            <div class="alert">{{ usererror }}</div>
+            <p class="alert" style='color:red' >{{ usererror }}</p>
             {% endif %}
             <input 
                 type="email" 
@@ -51,7 +51,7 @@
                 value="{{ email|default:'' }}" 
               />
               {% if emailerror %}
-              <div class="alert">{{ emailerror }}</div>
+              <p class="alert"  style="color: red;" >{{ emailerror }}</p>
               {% endif %}
               <input 
               type="password" 
@@ -65,17 +65,22 @@
             class="form__input" 
             name="pass2" 
           />
+          
+          {% if error %}
+          <p class="alert"  style="color: red;"  >{{ error }}</p>
+          {% endif %}
+          {% if passerror %}
+          <p class="alert"  style="color: red;" >{{ passerror }}</p>
+          {% endif %}
           <input 
             type="text" 
             placeholder="Refferal code  (can be skipped)" 
             class="form__input" 
             name="Refferal" 
+            value="{{ refferal }}"
           />
-          {% if error %}
-          <div class="alert">{{ error }}</div>
-          {% endif %}
-          {% if passerror %}
-          <div class="alert">{{ passerror }}</div>
+          {% if refererror %}
+          <p class="alert" style="color: red;">{{refererror}}</p>
           {% endif %}
         
               <div class="form__btn">

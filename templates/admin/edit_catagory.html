@@ -33,6 +33,9 @@
                                                         <label class="form-label">Offers</label>
                                                         <input name="offer" class="form-control" type="tel" value="{{item.offer}}"   placeholder="" />
                                                     </div>
+                                                    {% if createerror %}
+                                                    <p style="color: red;">{{ createerror  }}</p>
+                                                    {% endif %}
                                                     <!-- col .// -->
                                                 </div>
                                                 <!-- row.// -->
@@ -50,8 +53,7 @@
                                             <!-- col.// -->
                                         </div>
                                         <!-- row.// -->
-                                        <br />
-                                        <p style="color: red;" >{{ createerror }}</p>
+                                        
                                         <button class="btn btn-primary" type="submit">Save changes</button>
                                     </form>
                                     {% endif %}

@@ -460,7 +460,7 @@ body {
                       <td class="status {{ val.status|lower }}">
                         {{ val.status }}
                       </td>
-                      <td>${{ val.total_price }}</td>
+                      <td>₹{{ val.real_price }}</td>
                       <td><a href="{% url 'orderdetails' id=val.id %}" class="btn view__order">View</a></td>
                     </tr>
                     {% endfor %}

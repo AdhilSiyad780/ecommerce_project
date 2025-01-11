@@ -14,6 +14,7 @@ from django.contrib.auth.hashers import make_password
 from Coupons.models import wallet
 from transaction.models import transactions
 from django.utils.crypto import get_random_string
+import re
 
 
 
@@ -40,6 +41,8 @@ def send_otp_mail(otp,email):
 
 
 def signup(request):
+    if  request.user.is_authenticated:
+        return redirect('index')
     error = {}
     theerror = ''
     if request.method =='POST':
@@ -47,20 +50,58 @@ def signup(request):
         email = request.POST.get('email')
         pass1 = request.POST.get('pass1')
         pass2 = request.POST.get('pass2')
-        Refferal = request.POST.get('Refferal',None)
+        refferal = request.POST.get('Refferal',None)
+        if not username:
+            theerror = 'username is manditory'
+        elif len(username)<=8:
+            theerror = 'the username should be greater than 8 charactors'
+        elif User.objects.filter(username=username).exists():
+            theerror = 'the username already exists'
+        elif username.strip()== '' :
+            theerror = 'username cannot be whitespace'
+        if theerror:
+            return render(request,'signup.html',{'username':username,'usererror':theerror} )
+        
+        
+        elif not email:
+            theerror='email is manditory'
+        elif User.objects.filter(email=email).exists():
+            theerror='The email already exists'
+        elif len(email)<9:
+            theerror = 'Enter a valid email'
+        elif email.strip()== '' :
+            theerror = 'email cannot be whitespace'
+        email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+        if not re.match(email_regex, email):
+            error = 'Enter a valid email address.'
+        if theerror:
+            return render(request,'signup.html',{'username':username,'email':email,'emailerror':theerror} )
         
 
-        if User.objects.filter(username=username).exists():
-            theerror = 'username already exists'
-            return render(request,'signup.html',{ 'usererror':theerror})
+        elif len(pass1) < 8:
+            theerror = 'Password must be at least 8 characters long.'
+        elif not any(char.isupper() for char in pass1):
+            theerror = 'Password must contain at least one uppercase letter.'
+        elif not any(char.islower() for char in pass1):
+            theerror = 'Password must contain at least one lowercase letter.'
+        elif not any(char.isdigit() for char in pass1):
+            theerror = 'Password must contain at least one digit.'
+        elif not any(char in "!@#$%^&*()_" for char in pass1):
+            theerror = 'Password must contain at least one special character.'
+        elif pass1!=pass2:
+            theerror = 'your passwords does not match'
+        if theerror:
+            return render(request,'signup.html',{'username':username,'email':email,'passerror':theerror} )
         
-        if User.objects.filter(email=email).exists():
-            theerror = 'email already exists'
-            return render(request,'signup.html',{ 'emailerror':theerror})
-        if pass1!=pass2:
-            theerror = 'password does not match'
-            return render(request,'signup.html',{ 'passerror':theerror})
+        if refferal and not Refferal.objects.filter(refferal_code=refferal).exists():
+            theerror = 'invalid Refferal code'
+        if theerror:
+            return render(request,'signup.html',{'username':username,'email':email,'refererror':theerror})
+        
 
+        
+        
+         
 
     
 
@@ -76,7 +117,7 @@ def signup(request):
             OTP.objects.update_or_create(email=email,defaults={'otp': otp, 'expires_at': expiry_time})
             error = {}
             
-            request.session['registration'] = {'username':username,'email':email,'password':pass1 ,'Refferal':Refferal}
+            request.session['registration'] = {'username':username,'email':email,'password':pass1 ,'Refferal':refferal}
 
             
             if not send_otp_mail(otp,email):
@@ -153,7 +194,8 @@ def verify_otp(request, email):
                         print("22222222222222222222222222222222222222222222222222222222222222222222222222222")
                         alwallet,created = wallet.objects.get_or_create(user=reffered_by_user)
                         if not created:
-                            wallet.objects.create(user=reffered_by_user,balance=100)
+                            alwallet.balance += 100
+                            print(f'{alwallet.user} has incerased 100')
                             transactions.objects.create(user=reffered_by_user,status='Refferal',amount=100)
                         else:
                             alwallet.balance+=100
@@ -161,6 +203,7 @@ def verify_otp(request, email):
                             alwallet.save()
 
                         wallet.objects.create(user=request.user,balance=100)
+                        
                         transactions.objects.create(user=request.user,status='Refferal',amount=100)
 
 
@@ -232,6 +275,8 @@ def resend_otp(request,email):
 
 
 def login_user(request):
+    if  request.user.is_authenticated:
+        return redirect('index')
     error = ' '
     if request.method == "POST":
         username = request.POST.get('email')
@@ -250,9 +295,9 @@ def login_user(request):
             
     return render(request,'login.html')
 def home(request):
-    alpha = catagory.objects.all()
-    arrivals = Products.objects.order_by('-id')[:4]
-    Product6 = Products.objects.all()[:6]
+    alpha = catagory.objects.filter(is_active=True)
+    arrivals = Products.objects.filter(is_active=True,catagory__is_active=True).order_by('-id')[:4]
+    Product6 = Products.objects.filter(is_active=True,catagory__is_active=True).all()[:6]
     return render(request,'index.html',{'item':alpha,'newarrivals':arrivals,'product6':Product6})
 
 def logout_user(request):
@@ -260,9 +305,10 @@ def logout_user(request):
     return redirect('login_user')
 
 def forgot_password(request):
+    if not request.user.is_authenticated:
+        return redirect('login_user')
     print('=======================1==============1=========1============1================')
-    if request.user.is_authenticated:
-        return redirect('index')
+    
     if request.method=='POST':
         print('=================2==========2===========2=============2===========')
         email = request.POST.get('email') 

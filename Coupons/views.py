@@ -20,7 +20,7 @@ def list_coupons(request):
         return redirect('adminlogin')
         
     search_query = request.GET.get('search','')
-    alpha = coupons.objects.all()
+    alpha = coupons.objects.order_by('id').all()
     if search_query:
         alpha = alpha.filter(
             Q(id__icontains=search_query)|
@@ -112,8 +112,9 @@ def edit_coupon(request,id):
         valid_from = request.POST.get('validfrom')
         valid_to = request.POST.get('validto')
         limit = request.POST.get('limit')
+        print(code,discount,min_purchase,valid_from,valid_to)
         if not (any(char.isdigit() for char in code) and any(char.isalpha() for char in code)):
-            error='not field can be empty'
+            error='code should be mixture of number and alphabets'
         if valid_from or valid_to:
             try:
                 valid_from_date = datetime.strptime(valid_from,"%Y-%m-%d")

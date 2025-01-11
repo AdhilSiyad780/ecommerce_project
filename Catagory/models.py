@@ -3,7 +3,7 @@ from cloudinary.models import CloudinaryField
 
 # Create your models here.
 class catagory(models.Model):
-    name = models.CharField(max_length=10)
+    name = models.CharField(max_length=100)
     description = models.CharField(max_length=100)
     image = CloudinaryField('image') 
     offer = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, default=0.0)  # Set default to 0

@@ -198,7 +198,7 @@ def list_variant(request,product_id):
     # try:
     alpha = get_object_or_404(Products,id=product_id)
 
-    variants = SizeVariant.objects.filter(product=alpha.id)
+    variants = SizeVariant.objects.filter(product=alpha.id).order_by('id')
      
     paginator = Paginator(variants,3)
     pagenumber = request.GET.get('page')
@@ -273,7 +273,7 @@ def edit_variant(request,variant):
     
 
 def display_products(request):
-    alpha = Products.objects.filter(is_active=True)
+    alpha = Products.objects.filter(is_active=True,catagory__is_active=True)
     cata = catagory.objects.filter(is_active = True)
 
     sort = request.GET.get('sort','')
@@ -334,7 +334,7 @@ def product_details(request,id):
             default=len(sizes_order)
         )
     ).order_by("sort_order")
-    related = Products.objects.filter(name=alpha.name)[:3]
+    related = Products.objects.filter(name=alpha.name,catagory__is_active=True,is_active=True)[:3]
     context = {'alpha':alpha,'size':size,'related':related,'review':reviews}
 
     return render(request,'product_details.html',context)

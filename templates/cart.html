@@ -6,12 +6,18 @@
     {% for message in messages %}
         {% if message.tags == 'error' %}
             Swal.fire({
-                icon: 'error',
+                icon: 'error',  // Error icon
                 title: 'Oops...',
                 text: '{{ message }}',
                 confirmButtonText: 'OK'
             });
-       
+        {% elif message.tags == 'success' %}
+            Swal.fire({
+                icon: 'success',  // Success icon
+                title: 'Success!',
+                text: '{{ message }}',
+                confirmButtonText: 'OK'
+            });
         {% endif %}
     {% endfor %}
 </script>
@@ -261,7 +267,7 @@ table, tr, td {
           <tr>
             <th style="width: 20%;">Image</th>
             <th>Size</th>
-            <th>Price</th>
+            <th>Offer Price</th>
             <th>Quantity</th>
             <th>Remove</th>
           </tr>
@@ -290,7 +296,7 @@ table, tr, td {
               </td>
               
                 <td>
-                  <span class="table__price">${{ entry.item.product.price }}</span>
+                  <span class="table__price">${{ entry.item.product.offer }}</span>
                 </td>
                 <td>
                   <div class="quantity-control" style="display: flex; justify-content: center; align-items: center; gap: 10px;">

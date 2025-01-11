@@ -378,21 +378,21 @@
             {% if item %}
             {% for val in item %}
             <div class="product__item">
+              <a href="{% url 'product_details' id=val.id %}">
+
               <div class="product__banner">
-                <a href="{% url 'product_details' id=val.id %}">
+                
                   <div class="product__images">
                     <img src="{{ val.image1.url }}" alt="" class="product__img default" />
                     <img src="{{ val.image2.url }}" alt="" class="product__img hover" />
                   </div>
                   <div class="product__actions">
-                    <a href="#" class="action__btn" aria-label="Quick View">
-                      <i class="fi fi-rs-eye"></i>
-                    </a>
+                    
                     <a href="{% url 'add_wishlist' id=val.id %}" class="action__btn" aria-label="Add to Wishlist">
                       <i class="fi fi-rs-heart"></i>
                     </a>
                   </div>
-                </a>
+               
               </div>
               <div class="product__content">
                 <h3 class="product__title">{{ val.name }}</h3>
@@ -418,7 +418,9 @@
                   <span class="new__price">₹{{ val.offer }}</span>
                 </div>
               </div>
+            </a>
             </div>
+            
 
             {% endfor %}
             {% else %}

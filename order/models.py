@@ -21,6 +21,7 @@ class AlOrder(models.Model):
     address = models.ForeignKey(useraddress, on_delete=models.CASCADE,null=False)
     payment_method = models.CharField(max_length=20)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    real_price = models.DecimalField(max_digits=10,decimal_places=2)
     status = models.CharField(max_length=10, choices=ORDER_STATUS_CHOICES, default='pending')
     coupon = models.ForeignKey(coupons, on_delete=models.CASCADE, null=True, blank=True) 
     razorpay_order_id = models.CharField(max_length=255,null=True)

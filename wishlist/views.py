@@ -96,8 +96,7 @@ def wishlist_to_cart(request,id):
     stock = size_variant.stock if size_variant else 0 
     quantity = int(request.POST.get('quantity', 1))
     if stock == 0:
-        messages.error(request, 'Product is out of stock')
-        return redirect('product_details', id)
+        return redirect('wishlist')
    
     if quantity > stock:
         messages.warning(request, f'Only {stock} items available. Adjusted to stock limit.')
@@ -119,11 +118,12 @@ def wishlist_to_cart(request,id):
                 cart_item.quantity += quantity
             cart_item.save()
             messages.success(request, 'Product quantity updated in the cart')
+            return redirect('wishlist')
 
     
         else:
             messages.success(request, 'Product added to the cart successfully')
-
+            return redirect('wishlist')
     return redirect('wishlist')
 
 

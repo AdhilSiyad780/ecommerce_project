@@ -58,6 +58,8 @@ def placeorder(request):
         coupon_obj = None
         # Calculate the cart total
         cart_total =  cart_total_cal(request)
+        real_price = cart_total_cal(request)
+        print('cart total:',cart_total)
         applied_coupon = request.session.get('applied_coupon', None)
         coupon = None
         if applied_coupon:
@@ -71,8 +73,10 @@ def placeorder(request):
                 return redirect('checkout')
         if applied_coupon:
             coupon_obj = coupons.objects.get(id=applied_coupon['id'])
-            discount = cart_total * (Decimal(applied_coupon['discount_value']) / Decimal(100))
+            cart_total = Decimal(cart_total)
+            discount =  cart_total * (Decimal(applied_coupon['discount_value']) / Decimal(100))
             cart_total -= discount
+            print('cart after discount',cart_total)
             
         # Get the selected shipping address
         shipping_address = useraddress.objects.filter(id=address_id, user=request.user).first()
@@ -91,6 +95,7 @@ def placeorder(request):
                 address=shipping_address,
                 payment_method=payment_type,
                 total_price=cart_total+150,
+                real_price=real_price,
                 coupon = coupon_obj,
                 status='Failed',
                 created_at=timezone.now(),
@@ -104,8 +109,9 @@ def placeorder(request):
 
                 # Create Razorpay order
                 # In placeorder view
+                cart_total = cart_total+150
                 razorpay_order = client.order.create({
-                'amount': int((cart_total + 150) * 100),  # Amount in paisa
+                'amount': int((cart_total ) * 100),  # Amount in paisa
                 'currency': 'INR',
                 'payment_capture': '1',
                  })
@@ -113,16 +119,17 @@ def placeorder(request):
                 # Save order details locally
                 request.session['razorpay_order_id'] = razorpay_order['id']
                 request.session['address_selected'] = address_id
-
+                
                 print('2222222222222222222222222222222222222222')
                 success,error = _finalize_order(request, items, order)
+                print(cart_total)
                 if not success:
                     messages.error(request,error)
                     return redirect('checkout')
                 return render(request, 'payment_page.html', {
                     'razorpay_order_id': razorpay_order['id'],
                     'razorpay_key': settings.RAZORPAY_KEY_ID,
-                    'amount': cart_total+150,
+                    'amount':cart_total ,
                     'user_email': request.user.email,
                     'user_contact': address_id,  
                     'order':order,
@@ -138,6 +145,7 @@ def placeorder(request):
                 address=shipping_address,
                 payment_method=payment_type,
                 total_price=cart_total+150,
+                real_price=real_price,
                 coupon = coupon_obj,
                 status='pending',
                 created_at=timezone.now(),
@@ -418,24 +426,26 @@ def indiviudalcancel(request,id,id2):
     order = get_object_or_404(AlOrder,id=id)
     item = get_object_or_404(AlOrderItem,id=id2)
     items = AlOrderItem.objects.filter(order=order).all()
-    if (items.filter(status='cancelled').count())+1==items.count():
-        order.status='canceled'
-    print((items.filter(status='cancelled').count()))
-    print(items.count())
+    
    
     if order.status == 'completed' :
-        cart = cart_total_cal(request)
-        cart_total=cart+150
+        cart = order.real_price
         if order.coupon:
-            discount = cart_total * (Decimal(order.coupon.discount_value) / Decimal(100))
+            print(cart)
+            real_price = Decimal(order.real_price)
+            print('real price',real_price)
+            minus = item.product.offer*(Decimal(item.product.catagory.offer)/100)
+            item_price = item.product.offer-minus
+            print(f'item_price:{item_price}')
+            discount = Decimal(real_price) * (Decimal(order.coupon.discount_value) / Decimal(100))
             print(f' discount: {discount}')
        
             total_quantity = AlOrderItem.objects.filter(order=order).aggregate(Sum('quantity'))['quantity__sum']
-            
+            # print(f'item name : {item.name}')
             print(f'total_quantity{total_quantity}')
             single = discount/total_quantity
             print(f'single{single}')
-            reductable_amount = (item.product.offer*item.quantity)-(item.quantity*single)
+            reductable_amount = (item_price*item.quantity)-(item.quantity*single)
             print(f'reductable_amount{reductable_amount}')
 
             
@@ -452,15 +462,28 @@ def indiviudalcancel(request,id,id2):
             thewallet.save()
             transactions.objects.create(user=request.user,order=order,payment_type='razorpay',amount=reductable_amount,
                                         status='Canceled')
+            if (items.filter(status='cancelled').count())+1==items.count():
+                order.status='canceled'
+            print((items.filter(status='cancelled').count()))
+            print(items.count())
             order.total_price -= reductable_amount
             order.save()
         else:
-            reductable_amount=item.product.offer*item.quantity
+            minus = item.product.offer*(Decimal(item.product.catagory.offer)/100)
+            item_price = item.product.offer-minus
+            reductable_amount=item_price*item.quantity
+            print('reductable amount',reductable_amount)
+
+
             thewallet, created = wallet.objects.get_or_create(user=request.user, defaults={'balance': Decimal('0')})
             thewallet.balance += reductable_amount
             thewallet.save()
             transactions.objects.create(user=request.user,order=order,payment_type='razorpay',amount=reductable_amount,
                                         status='Canceled')
+            if (items.filter(status='cancelled').count())+1==items.count():
+                order.status='canceled'
+            print((items.filter(status='cancelled').count()))
+            print(items.count())
             size_variant = item.size_variant
             if size_variant:
                         # Increase the stock by the quantity in the order
@@ -469,36 +492,57 @@ def indiviudalcancel(request,id,id2):
                 item.save()
             print('=============================================================')
             order.total_price-=reductable_amount
+            print('order total',order.total_price)
             
         
     if order.status == 'pending' or order.status == 'canceled':
+        cart = order.real_price
         if order.coupon:
-            cart = cart_total_cal(request)
-            cart_total=cart+150
-            discount = cart_total * (Decimal(order.coupon.discount_value) / Decimal(100))
+            print(cart)
+            real_price = Decimal(order.real_price)
+            print('real price',real_price)
+            minus = item.product.offer*(Decimal(item.product.catagory.offer)/100)
+            item_price = item.product.offer-minus
+            print(f'item_price:{item_price}')
+            discount = Decimal(real_price) * (Decimal(order.coupon.discount_value) / Decimal(100))
             print(f' discount: {discount}')
        
             total_quantity = AlOrderItem.objects.filter(order=order).aggregate(Sum('quantity'))['quantity__sum']
+            # print(f'item name : {item.name}')
             print(f'total_quantity{total_quantity}')
             single = discount/total_quantity
             print(f'single{single}')
-            reductable_amount = item.product.offer*item.quantity-item.quantity*single
+            reductable_amount = (item_price*item.quantity)-(item.quantity*single)
             print(f'reductable_amount{reductable_amount}')
-            order.total_price -= reductable_amount
+
+            
             size_variant = item.size_variant
+            if (items.filter(status='cancelled').count())+1==items.count():
+                order.status='canceled'
+                print((items.filter(status='cancelled').count()))
+                print(items.count())
             if size_variant:
-                        # Increase the stock by the quantity in the order
+                        # Increase the stock by the quantity in the o   rder
                 size_variant.stock += item.quantity
                 size_variant.save()
                 item.save()
+            print(f'order price{item_price*item.quantity} - reductable amiunt{reductable_amount}')
+
+            order.total_price-=reductable_amount
+            print(order.total_price)
+
+
         else:
+            if (items.filter(status='cancelled').count())+1==items.count():
+                order.status='canceled'
+            print((items.filter(status='cancelled').count()))
+            print(items.count())
             size_variant = item.size_variant
             if size_variant:
                         # Increase the stock by the quantity in the order
                 size_variant.stock += item.quantity
                 size_variant.save()
                 item.save()
-            order.total_price-=item.product.offer
              
 
    
@@ -519,19 +563,26 @@ def individual_return(request,id,id2):
     item = get_object_or_404(AlOrderItem,id=id2)
     items = AlOrderItem.objects.filter(order=order).all()
     cart = cart_total_cal(request)
-    cart_total=cart+150
+    cart = order.real_price
     if order.coupon:
-        discount = cart_total * (Decimal(order.coupon.discount_value) / Decimal(100))
+        print(cart)
+        real_price = Decimal(order.real_price)
+        print('real price',real_price)
+        minus = item.product.offer*(Decimal(item.product.catagory.offer)/100)
+        item_price = item.product.offer-minus
+        print(f'item_price:{item_price}')
+        discount = Decimal(real_price) * (Decimal(order.coupon.discount_value) / Decimal(100))
         print(f' discount: {discount}')
        
         total_quantity = AlOrderItem.objects.filter(order=order).aggregate(Sum('quantity'))['quantity__sum']
+            # print(f'item name : {item.name}')
         print(f'total_quantity{total_quantity}')
         single = discount/total_quantity
         print(f'single{single}')
-        reductable_amount = item.product.offer*item.quantity-item.quantity*single
+        reductable_amount = (item_price*item.quantity)-(item.quantity*single)
         print(f'reductable_amount{reductable_amount}')
 
-        
+            
             
         size_variant = item.size_variant
         if size_variant:
@@ -549,6 +600,7 @@ def individual_return(request,id,id2):
         order.total_price -= reductable_amount
         order.save()
     else:
+
         reductable_amount=item.product.offer*item.quantity
         thewallet, created = wallet.objects.get_or_create(user=request.user, defaults={'balance': Decimal('0')})
         thewallet.balance += reductable_amount

@@ -40,6 +40,7 @@ def userprofile(request):
     print('============================================================')
     user = request.user
     details = AlOrder.objects.filter(user=request.user).order_by('-id')
+    
 
     address = useraddress.objects.filter(user=user).all()
     thewallet = wallet.objects.filter(user=request.user).first()
@@ -130,21 +131,58 @@ def add_address(request):
         landmark = request.POST.get('landmark')
         phonenumber = request.POST.get('phonenumber')
         print(fullname,city,state,postalcode,landmark,phonenumber)
-        if fullname is None or city is None or state is None  or   postalcode is None or landmark is None or phonenumber is  None:
+        if not fullname or not city or not state or not postalcode or not landmark or not phonenumber:
             error = 'every fields should be perfect '
-        if  phonenumber is None or len(phonenumber)>10   :
+        if fullname.strip()=='':
+            error = 'Enter a Valid Name'
+        if len(fullname)<5:
+            error = 'full name should be at least 5 letter'
+        if any(char.isdigit() for char in fullname):
+            error = 'Name cannot include numbers'
+        if error:
+            messages.error(request,error)
+            return render(request,'userprofile.html',{'active_tab': 'address','address':address })
+        
+        if landmark.strip()=='':
+            error = 'Enter a Valid landmark'
+        
+        
+        if landmark.strip()=='':
+            error = 'Enter a Valid landmark'
+        
+        if city.strip()=='':
+            error = 'city should be valid'
+        if city.isdigit()==True:
+            error = 'city should not be a number' 
+        
+        if   len(phonenumber)>10 or len(phonenumber)<10:
             error = 'Phone should be ten digits'
-        if  postalcode is None or len(postalcode)>6 :
+        if any(char.isalpha() for char in phonenumber ):
+            error = 'phone number can only contain numbers'
+        if   phonenumber.isdigit()==False:
+            error = 'Enter a valid phonenumber'
+        if error:
+            messages.error(request,error)
+            return render(request,'userprofile.html',{'active_tab': 'address','address':address })
+        
+
+
+
+        if  len(postalcode)>6:
             error = 'enter a valid postal code'
-        if  state is None or state.lower() not  in states_in_india:
+        if   postalcode.isdigit() == False:
+            error = 'enter a valid pincode'
+
+        
+        if  state.lower() not  in states_in_india:
             error = 'enter a valid state'
         
-        if  phonenumber is None or  phonenumber.isdigit()== False or postalcode.isdigit() == False:
-            error = 'enter a valid pincode'
+        
+        
         if useraddress.objects.filter(user=user,fullname=fullname,
                                    city=city,state=state,
                                    postal_code = postalcode,
-                                   landmark=landmark,phone_number=phonenumber):
+                                   landmark=landmark,phone_number=phonenumber).exists():
             error='addres already exists'
         if error:
             messages.error(request,error)
@@ -180,13 +218,48 @@ def editaddress(request, id):
 
         # Validation checks
         if not fullname or not city or not state or not postalcode or not landmark or not phonenumber:
-            error = 'All fields are required.'
-        elif len(phonenumber) != 10 or not phonenumber.isdigit():
-            error = 'Phone number should be exactly 10 digits.'
-        elif len(postalcode) != 6 or not postalcode.isdigit():
-            error = 'Enter a valid 6-digit postal code.'
-        elif state.lower() not in states_in_india:
-            error = 'Please select a valid state.'
+            error = 'every fields should be perfect '
+        if fullname.strip()=='':
+            error = 'Enter a Valid Name'
+        if len(fullname)<5:
+            error = 'full name should be at least 5 letter'
+        if any(char.isdigit() for char in fullname):
+            error = 'Name cannot include numbers'
+        if error:
+            messages.error(request,error)
+            return redirect('userprofile')        
+
+        if landmark.strip()=='':
+            error = 'Enter a Valid landmark'
+        
+        
+        if city.strip()=='':
+            error = 'city should be valid'
+        if city.isdigit()==True:
+            error = 'city should not be a number'   
+        
+
+        if   len(phonenumber)>10 or len(phonenumber)<10:
+            error = 'Phone should be ten digits'
+        if any(char.isalpha() for char in phonenumber ):
+            error = 'phone number can only contain numbers'
+        if   phonenumber.isdigit()==False:
+            error = 'Enter a valid phonenumber'
+        if error:
+            messages.error(request,error)
+            return redirect('userprofile')        
+        if  len(postalcode)>6:
+            error = 'enter a valid postal code'
+        if   postalcode.isdigit() == False:
+            error = 'enter a valid pincode'
+
+        
+        if  state.lower() not  in states_in_india:
+            error = 'enter a valid state'
+        
+        
+
+
         # Check if the address already exists (exclude the current address being edited)
         elif useraddress.objects.filter(user=user, fullname=fullname, city=city, state=state,
                                         postal_code=postalcode, landmark=landmark, phone_number=phonenumber).exclude(id=id):
@@ -194,17 +267,18 @@ def editaddress(request, id):
 
         if error:
             messages.error(request,error)
-            return render(request, 'userprofile.html', {'active_tab': 'address', 'error': error, 'address': alpha})
-
+            return redirect('userprofile')
         # If no errors, update the address
+        print('===================================================')
         address.fullname = fullname
         address.city = city
-        address.state = state
+        address.state = state            
+
         address.postal_code = postalcode
         address.landmark = landmark
         address.phone_number = phonenumber
         address.save()  # Save the updated address instance
-
+        messages.success(request,'updated address')
         # Redirect to the user profile or address list after success
         return redirect('userprofile')  # Assuming the URL name for the profile page is 'userprofile'
 

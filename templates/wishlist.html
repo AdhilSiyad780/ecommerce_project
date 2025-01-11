@@ -114,5 +114,25 @@
       </div>
     </section>
   </main>
-
+  {% if messages %}
+  <script>
+      {% for message in messages %}
+          {% if message.tags == 'error' %}
+              Swal.fire({
+                  icon: 'error',  // Error icon
+                  title: 'Oops...',
+                  text: '{{ message }}',
+                  confirmButtonText: 'OK'
+              });
+          {% elif message.tags == 'success' %}
+              Swal.fire({
+                  icon: 'success',  // Success icon
+                  title: 'Success!',
+                  text: '{{ message }}',
+                  confirmButtonText: 'OK'
+              });
+          {% endif %}
+      {% endfor %}
+  </script>
+  {% endif %}
 {% endblock %}

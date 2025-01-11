@@ -1,5 +1,5 @@
 from django.urls import path
-from order import views
+from order.views import views
 urlpatterns = [
 
     path('placeorder/',views.placeorder,name='placeorder'),
