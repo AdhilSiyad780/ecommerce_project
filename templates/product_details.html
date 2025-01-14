@@ -237,6 +237,24 @@
                   </a>
                   
                 </div>
+                {% if rating %}
+                <div class="review__rating">
+                  {% if rating == 5 %}
+                  Average Rating : ★ ★ ★ ★ ★
+                  {% elif rating == 4%}
+                  Average Rating : ★ ★ ★ ★
+                  {% elif rating == 3%}
+                  Average Rating : ★ ★ ★ 
+                  {% elif rating == 2 %}
+                  Average Rating : ★ ★ 
+                  {% elif rating == 1 %}
+                  Average Rating : ★
+                  {% endif  %}
+
+              </div>
+              {% else %}
+              No rating for this product
+              {% endif %}
                 
             <ul class="details__meta">
               <li class="meta__list flex"><span>SKU:</span>FWM15VKT</li>
@@ -341,11 +359,20 @@
                 <div class="review__data">
                   <!-- Rating: Dynamic stars (Optional) -->
                   <div class="review__rating">
-                    <!-- Example: Add stars dynamically if desired -->
-                    {% for i in 1..5 %}
-                      <i class="fi fi-rs-star {% if i <= val.rating %}active{% endif %}"></i>  <!-- Assuming `val.rating` stores the number of stars -->
-                    {% endfor %}
-                  </div>
+                    {% if val.rating == 5 %}
+                    ★ ★ ★ ★ ★
+                    {% elif val.rating == 4%}
+                    ★ ★ ★ ★
+                    {% elif val.rating == 3%}
+                    ★ ★ ★ 
+                    {% elif val.rating == 2 %}
+                    ★ ★ 
+                    {% elif val.rating == 1 %}
+                    ★
+                    {% endif  %}
+
+                </div>
+                
                   
                   <p class="review__description">
                     {{ val.review }}

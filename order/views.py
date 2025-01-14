@@ -42,10 +42,14 @@ def placeorder(request):
         payment_type = request.POST.get('payment_type')
         print(payment_type)
         print(address_id,'----------------------------------------------------------')
+        cart_total =  cart_total_cal(request)
+        
+
 
         if not address_id:
             messages.error(request, 'Please select an address.')
             return redirect('checkout')
+        
         address = useraddress.objects.get(user=request.user,id=address_id)
 
 
@@ -57,8 +61,9 @@ def placeorder(request):
         items = Cartitems.objects.filter(cart=gama)
         coupon_obj = None
         # Calculate the cart total
-        cart_total =  cart_total_cal(request)
         real_price = cart_total_cal(request)
+        
+
         print('cart total:',cart_total)
         applied_coupon = request.session.get('applied_coupon', None)
         coupon = None
@@ -87,13 +92,22 @@ def placeorder(request):
         if cart_total == 0:
             messages.error(request, 'No products have been added')
             return redirect('checkout')
+        if payment_type == 'cash_on_delivery':
+            print('====================awef=======================asdf')
+            sample = round(cart_total)
+            print('rounded cart',sample)
+            if sample > 1000:
+                print('==================== Cart total is less than 1000 =====================')
+
+                messages.error(request,'COD only availabe for purchase above 1000 rupees')
+                return redirect('checkout')
 
         # Razorpay integration for online payment
         if payment_type == 'razorpay':
             order = AlOrder.objects.create(
                 user=request.user,
                 address=shipping_address,
-                payment_method=payment_type,
+                payment_method='Not completed', 
                 total_price=cart_total+150,
                 real_price=real_price,
                 coupon = coupon_obj,
@@ -140,6 +154,7 @@ def placeorder(request):
                 return redirect('checkout')
          
         elif payment_type == 'cash_on_delivery': 
+            
             order = AlOrder.objects.create(
                 user=request.user,
                 address=shipping_address,
@@ -151,9 +166,7 @@ def placeorder(request):
                 created_at=timezone.now(),
                 updated_at=timezone.now()
             )
-            # Deduct stock and clear the cart
-            
-            # Delete the applied_coupon session
+           
             
             if order.coupon:
                 try:
@@ -253,9 +266,22 @@ def razorpay_callback(request,id):
             order.razorpay_order_id=razorpay_order_id
             print('razorpay_order_id have been asigned')
             order.status = 'completed'
+            order.payment_method = 'razorpay'
             print('order status changed to completed')
             order.save()
             print('deleted coupon')
+            if order.coupon:
+                try:
+                    
+                    if order.coupon.usage_limit>0:
+                        order.coupon.usage_limit-=1
+                        order.coupon.save()
+                        del request.session['applied_coupon']
+                    else:
+                        AlOrder.objects.filter(id=order.id).delete()
+                        raise ValueError("Coupon usage limit has been exceeded.")
+                except:
+                    raise ValueError("Coupon usage limit has  exceeded.")
 
             print('-----3333333333333333333333333333333333333333333333333333333333333333')
             return JsonResponse({"status": "success", "redirect_url": reverse('success', args=[order.id])})
@@ -351,6 +377,7 @@ def  cancel_order(request, id):
     if not request.user.is_authenticated:
         return redirect('login_user')
     order = get_object_or_404(AlOrder, id=id, user=request.user)
+    reason = request.POST.get('reason')
 
     # Check if the order is still pending
     if order.status == 'pending' or order.status == 'completed':
@@ -372,6 +399,7 @@ def  cancel_order(request, id):
                                         status='Canceled')
                 # Update the order status to 'canceled'
                 order.status = 'canceled'
+                order.reason=reason
                 order.save()
                 # Delete a specific session key
                
@@ -398,7 +426,7 @@ def admin_order_list(request):
             Q(user__username__icontains=search_query) |
             Q(user__email__icontains=search_query)
         )
-    paginator = Paginator(alpha, 5)  
+    paginator = Paginator(alpha, 10)  
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
@@ -426,6 +454,7 @@ def indiviudalcancel(request,id,id2):
     order = get_object_or_404(AlOrder,id=id)
     item = get_object_or_404(AlOrderItem,id=id2)
     items = AlOrderItem.objects.filter(order=order).all()
+    reason = request.POST.get('reason')
     
    
     if order.status == 'completed' :
@@ -455,6 +484,7 @@ def indiviudalcancel(request,id,id2):
                         # Increase the stock by the quantity in the order
                 size_variant.stock += item.quantity
                 size_variant.save()
+                item.reason = reason
                 item.save()
             
             thewallet, created = wallet.objects.get_or_create(user=request.user, defaults={'balance': Decimal('0')})
@@ -585,11 +615,16 @@ def individual_return(request,id,id2):
             
             
         size_variant = item.size_variant
+        if (items.filter(status='returned').count())+1==items.count():
+            order.status='returned'
+            print((items.filter(status='returned').count()))
+            print(items.count())
         if size_variant:
                         # Increase the stock by the quantity in the order
             size_variant.stock += item.quantity
             size_variant.save()
             item.status='returned'
+
             item.save()
             
         thewallet, created = wallet.objects.get_or_create(user=request.user, defaults={'balance': Decimal('0')})
@@ -597,6 +632,7 @@ def individual_return(request,id,id2):
         thewallet.save()
         transactions.objects.create(user=request.user,order=order,payment_type='razorpay',amount=reductable_amount,
                                         status='Returned')
+        
         order.total_price -= reductable_amount
         order.save()
     else:
@@ -608,6 +644,10 @@ def individual_return(request,id,id2):
         transactions.objects.create(user=request.user,order=order,payment_type='razorpay',amount=reductable_amount,
                                         status='Returned')
         size_variant = item.size_variant
+        if (items.filter(status='returned').count())+1==items.count():
+            order.status='returned'
+            print((items.filter(status='returned').count()))
+            print(items.count())
         if size_variant:
                         # Increase the stock by the quantity in the order
             size_variant.stock += item.quantity
@@ -615,6 +655,7 @@ def individual_return(request,id,id2):
             item.status='returned'
             item.save()
         print('===========================price backed==================================')
+        
         order.total_price-=reductable_amount
         order.save()
 
@@ -657,7 +698,6 @@ def add_address_checkout(request):
     ]
 
     user = request.user
-    address = useraddress.objects.filter(user=user).all()
 
     if request.method == 'POST':
         print('========================================================================================================')
@@ -670,25 +710,57 @@ def add_address_checkout(request):
         landmark = request.POST.get('landmark')
         phonenumber = request.POST.get('phonenumber')
         print(fullname,city,state,postalcode,landmark,phonenumber)
-        if fullname is None or city is None or state is None  or   postalcode is None or landmark is None or phonenumber is  None:
+        if not fullname or not city or not state or not postalcode or not landmark or not phonenumber:
             error = 'every fields should be perfect '
-        if  phonenumber is None or len(phonenumber)>10   :
+        if fullname.strip()=='':
+            error = 'Enter a Valid Name'
+        if len(fullname)<5:
+            error = 'full name should be at least 5 letter'
+        if any(char.isdigit() for char in fullname):
+            error = 'Name cannot include numbers'
+        
+        if landmark.strip()=='':
+            error = 'Enter a Valid landmark'
+        
+        
+        if landmark.strip()=='':
+            error = 'Enter a Valid landmark'
+        
+        if city.strip()=='':
+            error = 'city should be valid'
+        if city.isdigit()==True:
+            error = 'city should not be a number' 
+        
+        if   len(phonenumber)>10 or len(phonenumber)<10:
             error = 'Phone should be ten digits'
-        if  postalcode is None or len(postalcode)>6 :
+        if any(char.isalpha() for char in phonenumber ):
+            error = 'phone number can only contain numbers'
+        if   phonenumber.isdigit()==False:
+            error = 'Enter a valid phonenumber'
+        
+        
+
+
+
+        if  len(postalcode)>6:
             error = 'enter a valid postal code'
-        if  state is None or state.lower() not  in states_in_india:
+        if   postalcode.isdigit() == False:
+            error = 'enter a valid pincode'
+
+        
+        if  state.lower() not  in states_in_india:
             error = 'enter a valid state'
         
-        if  phonenumber is None or  phonenumber.isdigit()== False or postalcode.isdigit() == False:
-            error = 'enter a valid pincode'
+        
+        
         if useraddress.objects.filter(user=user,fullname=fullname,
                                    city=city,state=state,
                                    postal_code = postalcode,
-                                   landmark=landmark,phone_number=phonenumber):
+                                   landmark=landmark,phone_number=phonenumber).exists():
             error='addres already exists'
         if error:
             messages.error(request,error)
-            return  redirect('checkout')
+            return redirect('checkout')
         useraddress.objects.create(user=user,fullname=fullname,
                                    city=city,state=state,
                                    postal_code = postalcode,
@@ -755,3 +827,35 @@ def invoice_download(request,id):
     html.write_pdf(response)
 
     return response
+
+def retry_razorpay_payment(request,id):
+    print('this is razorpay retry')
+    order = get_object_or_404(AlOrder,id=id)
+    cart_total = order.total_price
+    try:
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+        # Create Razorpay order
+        razorpay_order = client.order.create({
+            "amount": int(cart_total * 100),  # Amount in paise
+            "currency": "INR",
+            "receipt": str(order.id)
+        })
+        order.razorpay_order_id = razorpay_order['id']
+        order.save()
+             
+        
+        return render(request, 'payment_page.html', {
+                    'razorpay_order_id': order.razorpay_order_id,
+                    'razorpay_key': settings.RAZORPAY_KEY_ID,
+                    'amount':cart_total ,
+                    'user_email': request.user.email,
+                    'user_contact': order.address,  
+                    'order':order,
+                })
+    except Exception as e:
+        AlOrder.objects.filter(id=order.id).delete()
+        messages.error(request, f"Error creating Razorpay order: {str(e)}")
+        return redirect('orderdetails' ,id=order.id)
+    
+    

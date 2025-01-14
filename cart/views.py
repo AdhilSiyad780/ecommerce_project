@@ -92,14 +92,21 @@ def addcart(request, id, size=None):
         if not created: 
             if cart_item.quantity + quantity > stock:
                 cart_item.quantity = stock
+                messages.error(request, 'max stock reached')
+                return redirect('product_details', id)
             else:
                 cart_item.quantity += quantity
             cart_item.save()
             messages.success(request, 'Product quantity updated in the cart')
+            return redirect('product_details', id)
 
     
         else:
             messages.success(request, 'Product added to the cart successfully')
+            return redirect('product_details', id)
+    else:
+        messages.error(request,'only 5 product per product')
+
 
     return redirect('product_details', id)
 

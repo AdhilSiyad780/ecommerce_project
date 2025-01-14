@@ -205,6 +205,7 @@ EMAIL_HOST_PASSWORD = 'xjyd atpi uzpb ntjh'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  
 #xjyd atpi uzpb ntjh
 
+
 AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend', #for google
 ]

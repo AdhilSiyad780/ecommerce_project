@@ -114,6 +114,8 @@ def wishlist_to_cart(request,id):
         if not created: 
             if cart_item.quantity + quantity > stock:
                 cart_item.quantity = stock
+                messages.error(request,'maximum stock reached')
+                return redirect('wishlist')
             else:
                 cart_item.quantity += quantity
             cart_item.save()
@@ -124,6 +126,8 @@ def wishlist_to_cart(request,id):
         else:
             messages.success(request, 'Product added to the cart successfully')
             return redirect('wishlist')
+    else:
+        messages.error(request,'Can only add 5 quantity')
     return redirect('wishlist')
 
 

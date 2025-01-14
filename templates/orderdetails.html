@@ -3,6 +3,96 @@
 {% block title %}Order Details{% endblock %}
 
 {% block content %}
+<style>
+    .cancel-modal {
+        display: none; /* Hidden by default */
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
+    }
+
+    .cancel-modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        border-radius: 8px;
+        width: 50%;
+        max-width: 600px;
+        text-align: center;
+    }
+
+    .cancel-close-btn {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .cancel-close-btn:hover,
+    .cancel-close-btn:focus {
+        color: black;
+        text-decoration: none;
+    }
+
+    textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+     .modal {
+        display: none; /* Hidden by default */
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        border-radius: 8px;
+        width: 50%;
+        max-width: 600px;
+        text-align: center;
+    }
+
+    .close-btn {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close-btn:hover,
+    .close-btn:focus {
+        color: black;
+        text-decoration: none;
+    }
+
+    textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+</style>
 <div style="padding: 20px; max-width: 800px; margin: 0 auto; font-family: Arial, sans-serif;">
     <h1 style="font-size: 24px; color: #333; text-align: center; margin-bottom: 20px;">Order Details</h1>
 {% if order %}
@@ -23,7 +113,7 @@
                 {{ order.status }}
             </strong>
         </p>
-        <p style="font-size: 16px; margin: 5px 0;">Payment Method: <strong>{{ order.payment_type }}</strong></p>
+        <p style="font-size: 16px; margin: 5px 0;">Payment Method: <strong>{{ order.payment_method}}</strong></p>
         <p style="font-size: 16px; margin: 5px 0;">Total Amount: <strong>${{ order.total_price|floatformat:2 }}</strong></p>
     </div>
       {% if address %}
@@ -54,7 +144,7 @@
                     <td style="padding: 8px;">{{ item.product.name }}</td>
                     <td style="text-align: center; padding: 8px;">{{ item.quantity }}</td>
                     <td style="text-align: right; padding: 8px;">${{ item.product.offer|floatformat:2 }}</td>
-                    {% if order.status == 'delivered' %} 
+                    {% if order.status == 'delivered' or order.status == 'returned' %} 
                     <td style="text-align: center; padding: 8px;">
                         {% if item.status == 'pending' %}
                         <button onclick="openReviewModal('{{ item.id }}')" style="padding: 6px 12px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; display: inline-block; margin-right: 10px;">
@@ -70,17 +160,40 @@
                        <p style="color: red;">Returned</p>
                        {% endif %}
                     </td>
-                    {% elif order.status != 'delivered' %}
+                    {% elif order.status != 'delivered'  %}
                     <form action="{%  url 'indiviudalcancel' id=order.id id2=item.id %}">
                     <td style="text-align: center; padding: 8px;">
-                        {% if item.status == 'pending' %}
-                        <button     style="padding: 6px 12px; background-color: #af4c4c; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancel Product</button>
+                        {% if item.status == 'pending' and order.status != 'canceled' %}
+                        <!-- Cancel Product Button -->
+<button id="cancelProductBtn" type="button" style="padding: 6px 12px; background-color: #af4c4c; color: white; border: none; border-radius: 5px; cursor: pointer;">
+    Cancel Product
+</button>
+
+<!-- Cancel Product Modal Structure -->
+<div id="cancelProductModal" class="cancel-modal">
+    <div class="cancel-modal-content">
+        <span class="cancel-close-btn">&times;</span>
+        <h2>Cancel Product</h2>
+        <label for="cancelReason">Reason</label>
+        <textarea id="cancelReason" rows="4" cols="50" name="reason"  placeholder="Type your reason here..."></textarea>
+        <br><br>
+        <button type="submit" id="submitCancelReason" style="padding: 6px 12px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Confirm
+        </button>
+        <button type="button" id="closeCancelModalBtn" style="padding: 6px 12px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Close
+        </button>
+    </div>
+</div>
+          
+                        
                         {% else %}
                         <p style="color: red;">Canceled</p>
                         {% endif %}
                     </td>
                     </form>
-                    {% endif %} 
+                    {% endif %}
+                  
 
                     <div id="reviewModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 999;">
                         <div style="background-color: white; padding: 20px; border-radius: 8px; width: 400px;">
@@ -122,15 +235,40 @@
     <div style="text-align: center; margin-top: 20px;">
     <!-- Cancel Order Button (Only visible if order is pending) -->
      
-    {% if order.status != 'delivered' and order.status != 'canceled' %}
+    {% if order.status != 'delivered' and order.status != 'canceled' and order.status != 'returned' and order.status != 'Failed'  %}
     
             <form action="{% url 'cancel_order' id=order.id %}" method="post">
                 {% csrf_token %}
-                <button type="submit" style="padding: 10px 20px; font-size: 16px; background-color: #FF0000; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                <button type="button" id="cancelOrderBtn" style="padding: 10px 20px; font-size: 16px; background-color: #FF0000; color: white; border: none; border-radius: 5px; cursor: pointer;">
                     Cancel Order
                 </button>
+                <div id="cancelOrderModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close-btn">&times;</span>
+                        <h2>Cancel Order</h2>
+                        <label for="reason">Reason for cancellation:</label>
+                        <textarea id="reason" rows="4" cols="50" name="reason"  placeholder="Type your reason here..."></textarea>
+                        <br><br>
+                        <button type="submit" id="submitReason" style="padding: 10px 20px; font-size: 16px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            confirm
+                        </button>
+                        <button type="button" id="closeModalBtn" style="padding: 10px 20px; font-size: 16px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            Close
+                        </button>
+                    </div>
+                </div>
+
             </form>
         </div>
+    {% elif order.status == 'Failed' %}
+    <form action="{% url 'retry_razorpay_payment' id=order.id %}" method="post">
+        {% csrf_token %}
+        <button type="submit" style="padding: 10px 20px; font-size: 16px; background-color: #FF0000; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Retry Payment
+        </button>
+    </form>
+</div>
+
     {% endif %}
 {% endif %}
 </div>
@@ -194,5 +332,56 @@
         document.getElementById("reviewForm").rating.value = rating;  // Set the rating value in the form
     }
 </script>
+<script>
+    // Get modal elements
+    const modal = document.getElementById('cancelOrderModal');
+    const openModalBtn = document.getElementById('cancelOrderBtn');
+    const closeModalBtns = document.querySelectorAll('.close-btn, #closeModalBtn');
+
+    // Open the modal
+    openModalBtn.addEventListener('click', () => {
+        modal.style.display = 'block';
+    });
+
+    // Close the modal
+    closeModalBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    });
+
+    // Close modal when clicking outside of it
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+</script>
+<script>
+    // Get modal elements
+    const cancelModal = document.getElementById('cancelProductModal');
+    const openCancelModalBtn = document.getElementById('cancelProductBtn');
+    const closeCancelModalBtns = document.querySelectorAll('.cancel-close-btn, #closeCancelModalBtn');
+
+    // Open the cancel modal
+    openCancelModalBtn.addEventListener('click', () => {
+        cancelModal.style.display = 'block';
+    });
+
+    // Close the cancel modal
+    closeCancelModalBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            cancelModal.style.display = 'none';
+        });
+    });
+
+    // Close modal when clicking outside of it
+    window.addEventListener('click', (event) => {
+        if (event.target === cancelModal) {
+            cancelModal.style.display = 'none';
+        }
+    });
+</script>
+
 
 {% endblock %}

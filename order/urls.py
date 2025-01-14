@@ -1,5 +1,5 @@
 from django.urls import path
-from order.views import views
+from order import views
 urlpatterns = [
 
     path('placeorder/',views.placeorder,name='placeorder'),
@@ -15,6 +15,7 @@ urlpatterns = [
     path('indiviudalcancel/<int:id>/<int:id2>/',views.indiviudalcancel,name='indiviudalcancel'),
     path('individual_return/<int:id>/<int:id2>/',views.individual_return,name='individual_return'),
     path('invoice_download/<int:id>',views.invoice_download,name='invoice_download'),
+    path('retry_razorpay_payment/<int:id>/',views.retry_razorpay_payment,name='retry_razorpay_payment'),
     # ===============================Admin==============================================
     path('admin_order_list/',views.admin_order_list,name='admin_order_list'),
     path('admin_order_details/<int:id>/',views.admin_order_details,name='admin_order_details'),

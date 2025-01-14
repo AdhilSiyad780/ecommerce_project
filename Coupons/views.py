@@ -52,12 +52,31 @@ def create_coupons(request):
             messages.error(request, error)
             return redirect('list_coupons')
         try:
+            mininum_purchase = Decimal(min_purchase)
+            if mininum_purchase < 0:
+                messages.error(request, 'minimum purchase  should not be less than zero.')
+                return redirect('list_coupons')
+            
+        except InvalidOperation:
+            messages.error(request, 'Invalid minimum purchase  value.')
+            return redirect('list_coupons')
+ 
+        try:
             valid_from_date = datetime.strptime(valid_from,"%Y-%m-%d")
             valid_to_date = datetime.strptime(valid_to,"%Y-%m-%d")
+            time = datetime.now()
+            current_time = datetime.strftime(time,"%Y-%m-%d")
+
             if valid_from_date > valid_to_date:
                 error='Date should be correct'
+            if valid_from>current_time:
+                error='enter a valid date'
+                messages.error(request,error)
+                return redirect('list_coupons')
         except ValueError:
             error = 'Invalid date format'
+            messages.error(request,error)
+            return redirect('list_coupons')
         print('11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111')
         if not (any(char.isdigit() for char in code) and any(char.isalpha() for char in code)):
             messages.error(request, 'Code should be a combination of both numbers and characters.')
@@ -90,6 +109,7 @@ def create_coupons(request):
             error='limit is empty'
             messages.error(request, error)
             return redirect('list_coupons')
+        coupons.objects.create(code=code,discount_value=discount,min_purchase_amount=min_purchase,valid_from=valid_from,valid_to=valid_to,usage_limit=limit)
         
         
         

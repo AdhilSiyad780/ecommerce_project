@@ -146,7 +146,7 @@ form p {
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label">Product Description</label>
-                                    <textarea placeholder="Type here" class="form-control" name="description"  value="{{item.description}}"  rows="4"></textarea>
+                                    <input placeholder="Type here" class="form-control" name="description"  value="{{item.description}}"  rows="4"></input>
                                 </div>
                                 <div class="row">
                                     <div class="col-lg-4">
@@ -262,110 +262,84 @@ form p {
          <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
          <script>
-            document.addEventListener('DOMContentLoaded', function() {
-    function setupImageCropping(imageInputId, imageToCropId, cropContainerId, cropButtonId, previewImageId, croppedImageDataId) {
-        var cropper = null;
-        var imageInput = document.getElementById(imageInputId);
-        var imageToCrop = document.getElementById(imageToCropId);
-        var cropContainer = document.getElementById(cropContainerId);
-        var cropButton = document.getElementById(cropButtonId);
-        var previewImage = document.getElementById(previewImageId);
-        var croppedImageDataInput = document.getElementById(croppedImageDataId);
+            let cropper;
 
-        // Reset image input to clear any previous selection
-        imageInput.value = '';
+// Function to handle image upload and initialize the cropper
+function handleImageUpload(input, previewId, cropContainerId, imageToCropId, cropButtonId, hiddenInputId) {
+    const inputElement = document.getElementById(input);
+    const previewElement = document.getElementById(previewId);
+    const cropContainer = document.getElementById(cropContainerId);
+    const imageToCrop = document.getElementById(imageToCropId);
+    const cropButton = document.getElementById(cropButtonId);
+    const hiddenInput = document.getElementById(hiddenInputId);
 
-        imageInput.addEventListener("change", function (e) {
-            var file = e.target.files[0];
-            if (!file) return;
+    inputElement.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
 
-            var reader = new FileReader();
-            reader.onload = function (event) {
-                // Clear previous cropper if exists
+            reader.onload = (e) => {
+                imageToCrop.src = e.target.result;
+                cropContainer.style.display = "block";
+                previewElement.style.display = "none";
+                cropButton.style.display = "inline-block";
+
+                // Initialize Cropper.js
                 if (cropper) {
                     cropper.destroy();
                 }
-
-                // Set image source
-                imageToCrop.src = event.target.result;
-
-                // Initialize Cropper
                 cropper = new Cropper(imageToCrop, {
-                    aspectRatio: 1, // Square crop
+                    aspectRatio: 1,
                     viewMode: 1,
-                    autoCropArea: 0.8, // Increase crop area
-                    minCropBoxWidth: 100,
-                    minCropBoxHeight: 100,
-                    ready: function() {
-                        // Automatically crop when image is loaded
-                        var cropped = cropper.getCroppedCanvas({
-                            width: 300, // Set a standard size
-                            height: 300
-                        });
-                        
-                        // Show preview
-                        previewImage.src = cropped.toDataURL();
-                        document.getElementById(previewImageId.replace('previewImage', 'imagePreview')).style.display = "block";
-
-                        // Set cropped image data
-                        croppedImageDataInput.value = cropped.toDataURL('image/jpeg');
-                    }
+                    autoCropArea: 1,
                 });
-
-                // Show crop container and button
-                cropContainer.style.display = "block";
-                cropButton.style.display = "block";
             };
             reader.readAsDataURL(file);
-        });
+        }
+    });
 
-        cropButton.addEventListener("click", function () {
-            if (cropper) {
-                // Get cropped canvas
-                var canvas = cropper.getCroppedCanvas({
-                    width: 300, // Standard width
-                    height: 300
-                });
+    cropButton.addEventListener("click", () => {
+        if (cropper) {
+            const canvas = cropper.getCroppedCanvas();
+            previewElement.src = canvas.toDataURL("image/png");
+            previewElement.style.display = "block";
+            cropContainer.style.display = "none";
+            cropButton.style.display = "none";
 
-                // Display preview
-                previewImage.src = canvas.toDataURL();
-                document.getElementById(previewImageId.replace('previewImage', 'imagePreview')).style.display = "block";
+            // Save cropped image data to hidden input
+            hiddenInput.value = canvas.toDataURL("image/png");
+        }
+    });
+}
 
-                // Convert cropped image to base64 and set to hidden input
-                var croppedImageBase64 = canvas.toDataURL("image/jpeg");
-                croppedImageDataInput.value = croppedImageBase64;
-            }
-        });
-    }
-
-    // Setup for each image input
-    setupImageCropping(
-        'imageInput1', 
-        'imageToCrop1', 
-        'cropContainer1', 
-        'cropButton1', 
-        'previewImage1', 
-        'croppedImage1Data'
+// Initialize cropping for each image field
+document.addEventListener("DOMContentLoaded", () => {
+    handleImageUpload(
+        "imageInput1",
+        "previewImage1",
+        "cropContainer1",
+        "imageToCrop1",
+        "cropButton1",
+        "croppedImage1Data"
     );
-
-    setupImageCropping(
-        'imageInput2', 
-        'imageToCrop2', 
-        'cropContainer2', 
-        'cropButton2', 
-        'previewImage2', 
-        'croppedImage2Data'
+    handleImageUpload(
+        "imageInput2",
+        "previewImage2",
+        "cropContainer2",
+        "imageToCrop2",
+        "cropButton2",
+        "croppedImage2Data"
     );
-
-    setupImageCropping(
-        'imageInput3', 
-        'imageToCrop3', 
-        'cropContainer3', 
-        'cropButton3', 
-        'previewImage3', 
-        'croppedImage3Data'
+    handleImageUpload(
+        "imageInput3",
+        "previewImage3",
+        "cropContainer3",
+        "imageToCrop3",
+        "cropButton3",
+        "croppedImage3Data"
     );
 });
+
          </script>
        
   {% endblock %}

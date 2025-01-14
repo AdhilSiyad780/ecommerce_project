@@ -5,20 +5,27 @@ import imghdr
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from products.models import Products
+from decimal import Decimal,InvalidOperation
+from django.db.models import Avg
+from PIL import Image
+
 
 
 # Create your views here.
-def is_valid_image(image_file):
-    """
-    Check if the uploaded file is an image.
-    """
-    # You can use imghdr to verify that the file is an image.
-    if image_file:
-        image_type = imghdr.what(image_file)
-        return image_type in ['jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff']
-    return False
+from PIL import Image
 
-
+def is_valid_image(filename):
+    try:
+        im = Image.open(filename)
+        im.verify()
+        im.close()
+        im = Image.open(filename) 
+        im.transpose(Image.FLIP_LEFT_RIGHT)
+        im.close()
+        return True
+    except: 
+        print(filename,'corrupted')
+        return False
 
 def product_list(request):
     # Restrict access to staff or authenticated users
@@ -62,53 +69,75 @@ def edit_product(request, id):
         description = request.POST.get('description')
         offer = request.POST.get('offer')
         price = request.POST.get('price')
-        catagory_id = request.POST.get('catagory_id')
+        image1=request.FILES.get('image1')
+        image2=request.FILES.get('image2')
+        image3=request.FILES.get('image3')
+
+
 
         # Update fields with validation
-        if name:
-            alpha.name = name
-        if description:
-            alpha.description = description
-         
-        if offer and price:
-            offer=float(offer)
-            price=float(price)
-            if offer > price or price <offer:
-                error='the price should be greater than offer'
-            alpha.offer=offer
-            alpha.price=price
+        if name.strip()=='':
+            error='Enter a valid name'
+        if len(name.strip())<5:
+            error='description should be greater than 5 charactors'
+        if description.strip()=='':
+                error='Enter a valid name'
+        if len(description.strip())<10:
+            error='description should be greater than 10 charactors'
+        # if not price.isdigit():
+        #         error='pirce should be a number'
+        # if not offer.isdigit():
+        #     error='offer should be a number'
+        
+        
+        try:
 
-        if offer:
-            offer = float(offer)
-            if offer>alpha.price :
-                error = 'offer should be lesser than price'
-            alpha.offer=offer
-        if price:
-            price = float(price)
-            if price<alpha.price :
-                error = 'price should be lesser than offer'
-            alpha.price=price
+    # Convert price and offer to Decimal
+            price = Decimal(price)
+            offer = Decimal(offer)
 
+    # Check if price and offer are greater than zero
+            if price <= 0:
+                error = 'The price should be a valid number greater than zero.'
+    
+            if offer <= 0:
+                error = 'The offer should be a valid number greater than zero.'
+           
+    # Check if price is greater than or equal to offer
+            if price < offer:
+               error = 'The price should be greater than offer.'
+
+        except InvalidOperation:
+    # If the price or offer cannot be converted to a valid Decimal
+            error = 'The price and offer should be valid numbers.'
+
+        if image1:
+            if not  is_valid_image(image1):
+                error='the image is not valid'
+        if image2:
+            if not  is_valid_image(image2):
+                error='the image is not valid'
+        if image3:
+            if not  is_valid_image(image3):
+                error='the image is not valid'
+        if error:
+            print(error)
+            return render(request,'admin/edit_product.html', {'cata': cata, 'item': alpha, 'error': error})
             
 
-        if catagory_id:
-            try:
-                Catagory = catagory.objects.get(id=catagory_id)
-                alpha.catagory = Catagory
-            except catagory.DoesNotExist:
-                error = 'Selected category does not exist. '
-
-        # Validate and update images
-        for img_field, label in [('image1', 'Image 1'), ('image2', 'Image 2'), ('image3', 'Image 3')]:
-            image = request.FILES.get(img_field)
-            if image:
-                if is_valid_image(image):
-                    setattr(alpha, img_field, image)
-                else:
-                    error += f'{label} is invalid. '
 
         # Save if no errors
         if not error:
+            alpha.name=name
+            alpha.description=description
+            alpha.offer=offer
+            alpha.price=price
+            if image1:
+                alpha.image1=image1
+            if image2:
+                alpha.image2=image2
+            if image3:
+                alpha.image3=image3
             alpha.save()
             return redirect('product_list')
 
@@ -130,37 +159,53 @@ def create_product(request):
         image3 = request.FILES.get('image3')
         error = ''
         print(name,description,offer,price,catagory_id,image1,image2,image3)
+        
         try:
-            if int(price)<=0  or price is None :
-                error = 'enter a valid price'
-            if name is None:
-                error = 'enter a valid name'
-            if description is None:
-                error = 'enter a valid description'
-            if catagory_id is None:
-                error = 'catagory should be included'
-            if image1 is None or image2 is None or image3 is None:
-                error = "Three images should be included"
-            if int(offer)<=0 or int(offer)>int(price) or offer is None:
-                error='enter a valid offer'
-            if offer and price:
-                offer=float(offer)
-                price=float(price)
-                if offer > price or price <offer:
-                    error='the price should be greater than offer'
+            if not name or not description or not offer or not price or not catagory_id or not image1 or not image2 or not  image2 or not image3:
+                error='All field is compalsary'  
+            if name.strip()=='':
+                error='Enter a valid name'
+            if len(name.strip())<5:
+                error='description should be greater than 5 charactors'
+            if description.strip()=='':
+                error='Enter a valid name'
+            if len(description.strip())<10:
+                error='description should be greater than 10 charactors'
+            if not price.isdigit():
+                error='pirce should be a number'
+            if not offer.isdigit():
+                error='offer should be a number'
 
-            if not  is_valid_image(image1):
-                error = 'First image is not in image format'
-            if not  is_valid_image(image2):
-                error = 'Second image is not in image format'
-            if not  is_valid_image(image3):
-                error = 'Third image is not in image format'
-
-            if error:
-                return render(request,'admin/create_product.html',{'error':error,'item':alpha})
+                
+            if float(price)<=0:
+                error='the price should be a valid number'
+            if float(offer)<=0:
+                error='the offer should be a valid numbeer'
+            if float(price)<float(offer) or float(offer)>float(price) :
+                error='the price should be greater than the offer '
+            if  is_valid_image(image2) is False:
+                error='invalid format of image'
+            if  is_valid_image(image2) is False:
+                error='invalid format of image'
+            if  is_valid_image(image2) is False:
+                error='invalid format of image'
+            
+            
+            if error:    
+                print(error)
+                context = {
+                    'name':name,
+                    'description':description,
+                    'offer':offer,
+                    'price':price,
+                    'item':alpha,'error':error
+                    
+                }
+                return render(request,'admin/create_product.html',context)     
             Catagory = catagory.objects.get(id=catagory_id)
             product = Products.objects.create(catagory=Catagory,name=name,description=description,price=price,offer=offer,image1=image1,image2=image2,image3=image3)
             product.save()
+            print('product created')
             return redirect('product_list')
         except catagory.DoesNotExist:
             return render(request,'admin/create_product.html',{'item':alpha})
@@ -205,6 +250,7 @@ def list_variant(request,product_id):
     page_obj = paginator.get_page(pagenumber)
 
     return render(request,'admin/list_variant.html',{'variants':variants,'product_id':passid,'item':page_obj })
+
 
 def create_variant(request,product_id):
     if request.user.is_staff==False or not request.user.is_authenticated:
@@ -334,8 +380,16 @@ def product_details(request,id):
             default=len(sizes_order)
         )
     ).order_by("sort_order")
+
+    rating = Review_ration.objects.filter(product=alpha).aggregate(average=Avg('rating'))
+    print(rating)
+    avg_rating = rating['average']
+    if avg_rating:
+        avg_rating=round(avg_rating)
+    print('=======================')
+    print(avg_rating)
     related = Products.objects.filter(name=alpha.name,catagory__is_active=True,is_active=True)[:3]
-    context = {'alpha':alpha,'size':size,'related':related,'review':reviews}
+    context = {'alpha':alpha,'size':size,'related':related,'review':reviews,'rating':avg_rating}
 
     return render(request,'product_details.html',context)
     

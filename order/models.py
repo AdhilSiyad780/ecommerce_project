@@ -27,6 +27,7 @@ class AlOrder(models.Model):
     razorpay_order_id = models.CharField(max_length=255,null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    reason = models.TextField(max_length=500,null=True,blank=True)
 
     def __str__(self):
         return f"Order #{self.id} - {self.user.username}"
@@ -43,6 +44,7 @@ class AlOrderItem(models.Model):
     status = models.CharField(max_length=10,default='pending')
     created_at = models.DateTimeField(auto_now_add=True) 
     updated_at = models.DateTimeField(auto_now=True)
+    reason = models.TextField(max_length=500,null=True,blank=True)
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"
  

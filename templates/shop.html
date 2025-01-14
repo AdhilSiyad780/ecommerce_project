@@ -341,12 +341,13 @@
           <div class="form-group">
             <label for="category">Category</label>
             <select id="category" name="category">
-              <option value="">All Categories</option>
+              <option value="" {% if not request.GET.category %}selected{% endif %}>All Categories</option>
               {% for cat in cata %}
-              <option value="{{ cat.id }}">{{ cat.name }}</option>
-              {% endfor %}Size
-
-            </select>
+              <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>
+                  {{ cat.name }}
+              </option>
+              {% endfor %}
+          </select>
           </div>
 
           <!-- Rating -->

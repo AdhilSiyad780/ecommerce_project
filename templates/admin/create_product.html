@@ -143,23 +143,23 @@ form p {
                                 <!-- Product Details Section -->
                                 <div class="mb-4">
                                     <label for="product_name" class="form-label">Product Name</label>
-                                    <input type="text" placeholder="Type here" name="name" class="form-control" id="product_name" />
+                                    <input type="text" placeholder="Type here" name="name" class="form-control" id="product_name" value="{{name}}"/>
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label">Product Description</label>
-                                    <textarea placeholder="Type here" class="form-control" name="description" rows="4"></textarea>
+                                    <input placeholder="Type here" class="form-control" name="description" rows="4"  value="{{description}}"   ></input>
                                 </div>
                                 <div class="row">
                                     <div class="col-lg-4">
                                         <div class="mb-4">
                                             <label class="form-label">Regular Price</label>
-                                            <input placeholder="$" type="text" name="price" class="form-control" />
+                                            <input placeholder="$" type="text" name="price" class="form-control"  value="{{price}}" />
                                         </div>
                                     </div>
                                     <div class="col-lg-4">
                                         <div class="mb-4">
                                             <label class="form-label">Offer Price</label>
-                                            <input placeholder="$" type="text" name="offer" class="form-control" />
+                                            <input placeholder="$" type="text" name="offer" class="form-control"value="{{offer}}"  />
                                         </div>
                                     </div>
                                     <div class="col-lg-4">
@@ -184,7 +184,7 @@ form p {
                                     <div class="card-body">
                                         <div class="mb-4">
                                             <label for="imageInput1" class="form-label">Upload Image 1</label>
-                                            <input type="file" id="imageInput1" class="form-control" accept="image/*" name="image1" />
+                                            <input type="file" id="imageInput1" class="form-control" accept="image/*" name="image1"  value="{{image1}}"  />
                                             <div id="imagePreview1" style="display:none; margin-top: 10px;">
                                                 <img id="previewImage1" src="" style="max-width: 100%; height: auto;" />
                                             </div>
@@ -199,7 +199,7 @@ form p {
                                     <div class="card-body">
                                         <div class="mb-4">
                                             <label for="imageInput2" class="form-label">Upload Image 2</label>
-                                            <input type="file" id="imageInput2" class="form-control" accept="image/*" name="image2" />
+                                            <input type="file" id="imageInput2" class="form-control" accept="image/*" name="image2" value="{{image2}}" />
                                             <div id="imagePreview2" style="display:none; margin-top: 10px;">
                                                 <img id="previewImage2" src="" style="max-width: 100%; height: auto;" />
                                             </div>
@@ -214,7 +214,7 @@ form p {
                                     <div class="card-body">
                                         <div class="mb-4">
                                             <label for="imageInput3" class="form-label">Upload Image 3</label>
-                                            <input type="file" id="imageInput3" class="form-control" accept="image/*" name="image3" />
+                                            <input type="file" id="imageInput3" class="form-control" accept="image/*" name="image3" value="{{image3}}" />
                                             <div id="imagePreview3" style="display:none; margin-top: 10px;">
                                                 <img id="previewImage3" src="" style="max-width: 100%; height: auto;" />
                                             </div>
@@ -253,129 +253,87 @@ form p {
                 </div>
             </section>
             <!-- content-main end// -->
-        /
-        <script>
-            // Initialize the cropper for Image 1
-            var cropper1, canvas1;
-            document.getElementById("imageInput1").addEventListener("change", function (e) {
-                var reader = new FileReader();
-                reader.onload = function (event) {
-                    var image = document.getElementById("imageToCrop1");
-                    image.src = event.target.result;
-        
-                    // Initialize the Cropper.js instance
-                    if (cropper1) {
-                        cropper1.destroy();
-                    }
-                    cropper1 = new Cropper(image, {
-                        aspectRatio: 1, // You can adjust the aspect ratio as needed
-                        viewMode: 1,
-                        autoCropArea: 0.5,
-                        responsive: true
-                    });
-        
-                    // Show the crop container and crop button
-                    document.getElementById("cropContainer1").style.display = "block";
-                    document.getElementById("cropButton1").style.display = "block";
-                };
-                reader.readAsDataURL(e.target.files[0]);
-            });
-        
-            // Crop the image and display the result for Image 1
-            document.getElementById("cropButton1").addEventListener("click", function () {
-                if (cropper1) {
-                    // Get the cropped canvas
-                    canvas1 = cropper1.getCroppedCanvas();
-        
-                    // Check if canvas1 is not null or undefined
-                    if (canvas1) {
-                        // Update the preview image with the cropped image
-                        document.getElementById("previewImage1").src = canvas1.toDataURL();
-                        document.getElementById("imagePreview1").style.display = "block"; // Show the cropped preview
-        
-                        // Save the cropped image to hidden input as base64 JPEG
-                        var croppedImage1 = canvas1.toDataURL("image/jpeg");
-                        document.getElementById("croppedImage1Data").value = croppedImage1; 
-                    } else {
-                        console.error("Canvas could not be generated!");
-                    }
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+            
+      <script>
+   
+let cropper;
+
+// Function to handle image upload and initialize the cropper
+function handleImageUpload(input, previewId, cropContainerId, imageToCropId, cropButtonId, hiddenInputId) {
+    const inputElement = document.getElementById(input);
+    const previewElement = document.getElementById(previewId);
+    const cropContainer = document.getElementById(cropContainerId);
+    const imageToCrop = document.getElementById(imageToCropId);
+    const cropButton = document.getElementById(cropButtonId);
+    const hiddenInput = document.getElementById(hiddenInputId);
+
+    inputElement.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                imageToCrop.src = e.target.result;
+                cropContainer.style.display = "block";
+                previewElement.style.display = "none";
+                cropButton.style.display = "inline-block";
+
+                // Initialize Cropper.js
+                if (cropper) {
+                    cropper.destroy();
                 }
-            });
-        
-            // Repeat the same process for Image 2 and Image 3
-        
-            var cropper2, canvas2;
-            document.getElementById("imageInput2").addEventListener("change", function (e) {
-                var reader = new FileReader();
-                reader.onload = function (event) {
-                    var image = document.getElementById("imageToCrop2");
-                    image.src = event.target.result;
-        
-                    if (cropper2) {
-                        cropper2.destroy();
-                    }
-                    cropper2 = new Cropper(image, {
-                        aspectRatio: 1,
-                        viewMode: 1,
-                        autoCropArea: 0.5,
-                        responsive: true
-                    });
-        
-                    document.getElementById("cropContainer2").style.display = "block";
-                    document.getElementById("cropButton2").style.display = "block";
-                };
-                reader.readAsDataURL(e.target.files[0]);
-            });
-        
-            document.getElementById("cropButton2").addEventListener("click", function () {
-                if (cropper2) {
-                    canvas2 = cropper2.getCroppedCanvas();
-                    if (canvas2) {
-                        document.getElementById("previewImage2").src = canvas2.toDataURL();
-                        document.getElementById("imagePreview2").style.display = "block"; 
-        
-                        var croppedImage2 = canvas2.toDataURL("image/jpeg");
-                        document.getElementById("croppedImage2Data").value = croppedImage2; 
-                    }
-                }
-            });
-        
-            var cropper3, canvas3;
-            document.getElementById("imageInput3").addEventListener("change", function (e) {
-                var reader = new FileReader();
-                reader.onload = function (event) {
-                    var image = document.getElementById("imageToCrop3");
-                    image.src = event.target.result;
-        
-                    if (cropper3) {
-                        cropper3.destroy();
-                    }
-                    cropper3 = new Cropper(image, {
-                        aspectRatio: 1,
-                        viewMode: 1,
-                        autoCropArea: 0.5,
-                        responsive: true
-                    });
-        
-                    document.getElementById("cropContainer3").style.display = "block";
-                    document.getElementById("cropButton3").style.display = "block";
-                };
-                reader.readAsDataURL(e.target.files[0]);
-            });
-        
-            document.getElementById("cropButton3").addEventListener("click", function () {
-                if (cropper3) {
-                    canvas3 = cropper3.getCroppedCanvas();
-                    if (canvas3) {
-                        document.getElementById("previewImage3").src = canvas3.toDataURL();
-                        document.getElementById("imagePreview3").style.display = "block"; 
-        
-                        var croppedImage3 = canvas3.toDataURL("image/jpeg");
-                        document.getElementById("croppedImage3Data").value = croppedImage3; 
-                    }
-                }
-            });
-        </script>
-        
-      
+                cropper = new Cropper(imageToCrop, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    autoCropArea: 1,
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    cropButton.addEventListener("click", () => {
+        if (cropper) {
+            const canvas = cropper.getCroppedCanvas();
+            previewElement.src = canvas.toDataURL("png");
+            previewElement.style.display = "block";
+            cropContainer.style.display = "none";
+            cropButton.style.display = "none";
+
+            // Save cropped image data to hidden input
+            hiddenInput.value = canvas.toDataURL("png");
+        }
+    });
+}
+
+// Initialize cropping for each image field
+document.addEventListener("DOMContentLoaded", () => {
+    handleImageUpload(
+        "imageInput1",
+        "previewImage1",
+        "cropContainer1",
+        "imageToCrop1",
+        "cropButton1",
+        "croppedImage1Data"
+    );
+    handleImageUpload(
+        "imageInput2",
+        "previewImage2",
+        "cropContainer2",
+        "imageToCrop2",
+        "cropButton2",
+        "croppedImage2Data"
+    );
+    handleImageUpload(
+        "imageInput3",
+        "previewImage3",
+        "cropContainer3",
+        "imageToCrop3",
+        "cropButton3",
+        "croppedImage3Data"
+    );
+});
+
+      </script>
     {% endblock %}

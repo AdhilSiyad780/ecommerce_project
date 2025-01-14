@@ -8,6 +8,7 @@ from datetime import datetime,timedelta
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
 from django.db.models import Q
+from django.utils.timezone import now, make_aware
 
 
 
@@ -32,29 +33,34 @@ def download_sales_excel(request):
     end_date = request.GET.get('end_date')
     range_option = request.GET.get('range', 'daily')
     print(range_option,start_date,end_date)
-    if start_date:
-        start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-    if end_date:
-        end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-
-    if range_option == 'daily':
-        end_date = datetime.now().date()
-        start_date = end_date  
-    elif range_option == 'weekly':
-        end_date = datetime.now().date()
-        start_date = end_date - timedelta(days=7) 
-    elif range_option == 'yearly':
-        end_date = datetime.now().date()
-        start_date = datetime(end_date.year, 1, 1).date()
-    
     orders = AlOrder.objects.all()
     if start_date:
+        start_date = make_aware(datetime.strptime(start_date, '%Y-%m-%d'))
+    if end_date:
+        end_date = make_aware(datetime.strptime(end_date, '%Y-%m-%d').replace(hour=23, minute=59, second=59))
+
+# Apply range logic only if user-provided dates are missing
+    if not start_date or not end_date:
+        if range_option == 'daily':
+            end_date = now()  # Current timezone-aware datetime
+            start_date = end_date.replace(hour=0, minute=0, second=0, microsecond=0)  # Start of day
+        elif range_option == 'weekly':
+            end_date = now()  # Current timezone-aware datetime
+            start_date = (end_date - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)  # Start of week
+        elif range_option == 'yearly':
+            end_date = now()  # Current timezone-aware datetime
+            start_date = now().replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)  # Start of year
+
+
+    if start_date and end_date:
+       orders = orders.filter(created_at__gte=start_date, created_at__lte=end_date)
+    elif start_date:
         orders = orders.filter(created_at__gte=start_date)
-    if end_date:
+    elif end_date:
         orders = orders.filter(created_at__lte=end_date)
+    print(start_date,end_date)
 
 
-    orders = AlOrder.objects.all()
     data = orders.values('id','user__username','payment_method','total_price','status','coupon__code','created_at')
     
     sample = pd.DataFrame(data)
@@ -84,29 +90,36 @@ def download_sales_pdf(request):
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     range_option = request.GET.get('range', 'daily')
+    print(start_date,end_date,range_option)
+     
+    orders = AlOrder.objects.all()
+    
+    if start_date:
+        start_date = make_aware(datetime.strptime(start_date, '%Y-%m-%d'))
+    if end_date:
+        end_date = make_aware(datetime.strptime(end_date, '%Y-%m-%d').replace(hour=23, minute=59, second=59))
 
-    
-    if start_date:
-        start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-    if end_date:
-        end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-    print(range_option,start_date,end_date)
-    if range_option == 'daily':
-        end_date = datetime.now().date()
-        start_date = end_date  
-    elif range_option == 'weekly':
-        end_date = datetime.now().date()
-        start_date = end_date - timedelta(days=7) 
-    elif range_option == 'yearly':
-        end_date = datetime.now().date()
-        start_date = datetime(end_date.year, 1, 1).date()
-    
-    orders = AlOrder.objects.all()
-    if start_date:
+# Apply range logic only if user-provided dates are missing
+    if not start_date or not end_date:
+        if range_option == 'daily':
+            end_date = now()  # Current timezone-aware datetime
+            start_date = end_date.replace(hour=0, minute=0, second=0, microsecond=0)  # Start of day
+        elif range_option == 'weekly':
+            end_date = now()  # Current timezone-aware datetime
+            start_date = (end_date - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)  # Start of week
+        elif range_option == 'yearly':
+            end_date = now()  # Current timezone-aware datetime
+            start_date = now().replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)  # Start of year
+
+
+    if start_date and end_date:
+       orders = orders.filter(created_at__gte=start_date, created_at__lte=end_date)
+    elif start_date:
         orders = orders.filter(created_at__gte=start_date)
-    if end_date:
+    elif end_date:
         orders = orders.filter(created_at__lte=end_date)
-    orders = AlOrder.objects.all()
+    print(start_date,end_date)
+    orders = orders.order_by('-created_at')
     context = {
         "orders":orders,
         "current_year": datetime.now().year
