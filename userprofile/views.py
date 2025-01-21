@@ -4,16 +4,18 @@ from django.contrib.auth.hashers import check_password,make_password
 from auth_user.views import send_otp_mail,otp_generetor
 from auth_user.models import OTP
 from django.contrib.auth import login
-
+from allauth.socialaccount.models import SocialAccount
 from django.utils import timezone
 from datetime import timedelta
 from .models import useraddress
 from django.shortcuts import   get_object_or_404
 from order.models import AlOrder
 from django.contrib import messages
-from Coupons.models import wallet,coupons
+from Coupons.models import wallet
 from transaction.models import transactions
 from auth_user.models import Refferal
+from django.contrib.auth.decorators import login_required
+
 
 
 
@@ -34,6 +36,7 @@ states_in_india = [
     ]
 # Create your views here.
 
+@login_required(login_url='login_user')
 def userprofile(request):
     if  not  request.user.is_authenticated:
         return redirect('login_user')
@@ -47,56 +50,62 @@ def userprofile(request):
     trans = transactions.objects.filter(user=request.user).order_by('-created_at')[:5]
     referal_id = Refferal.objects.filter(user=request.user).first()
     print(thewallet)
+    the_mail = None
+    try:
+        social = SocialAccount.objects.get(user=user,provider='google')
+        the_mail = social.extra_data.get('email')
+    except SocialAccount.DoesNotExist:
+        the_mail = user.email
     
-    return render(request,'userprofile.html',{'user':user,'address':address,'active_tab': 'dashboard','orderdetails':details,'wallet':thewallet,'trans':trans,'ref':referal_id})
+    active_tab = request.session.pop('active_tab','default')
+    if  active_tab == 'default':
+        request.session['active_tab'] = 'dashboard'
+        active_tab = request.session.pop('active_tab')
+    print(active_tab)
+    return render(request,'userprofile.html',{'user':user,'address':address,'active_tab': active_tab,'orderdetails':details,'wallet':thewallet,'trans':trans,'ref':referal_id,'email':the_mail})
 
-def updateprofile(request):
-    if not request.user.is_authenticated:
-        return redirect('login_user')
-    print('===========================================================================================================================')
-    user = request.user
-    error = None 
+# def updateprofile(request):
+#     if not request.user.is_authenticated:
+#         return redirect('login_user')
+#     print('===========================================================================================================================')
+#     user = request.user
+#     error = None 
 
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
+#     if request.method == 'POST':
+#         email = request.POST.get('email')
+#         password = request.POST.get('password')
         
 
-        if User.objects.filter(username=username).exclude(id=user.id).exists():
-            error = 'Username already exists'
-        if User.objects.filter(username=user).exists():
-            error='please change the username'
+        
 
-        # Check if the email already exists
-        elif User.objects.filter(email=email).exclude(id=user.id).exists():
-            error = 'The email already exists'
+#         # Check if the email already exists
+#         if User.objects.filter(email=email).exclude(id=user.id).exists():
+#             error = 'The email already exists'
 
-        # Validate the password
-        elif not check_password(password, user.password):
-            error = 'Password does not match'
+#         # Validate the password
+#         elif not check_password(password, user.password):
+#             error = 'Password does not match'
 
-        if error:
-            return render(request, 'userprofile.html', {
-                'error': error,
-                'active_tab': 'update-profile',  # Pass the tab information
-            })
-        otp = otp_generetor()
-        expiry_time = timezone.now()+ timedelta(seconds=60)
+#         if error:
+#             messages.error(request,error)
+#             request.session['active_tab']='update-profile'
+#             return redirect('userprofile')
+#         otp = otp_generetor()
+#         expiry_time = timezone.now()+ timedelta(seconds=60)
  
-        OTP.objects.update_or_create(email=email,defaults={'otp': otp, 'expires_at': expiry_time})
+#         OTP.objects.update_or_create(email=email,defaults={'otp': otp, 'expires_at': expiry_time})
 
-        request.session['registration'] = {'username':username,'email':email,'password':password }
 
-        if not send_otp_mail(otp,email):
-            error='Sending OTP  to your email failed'
-            return render(request,'otp2.html',{'error':error})
-        return redirect('verify_otp',email=email) 
+#         if not send_otp_mail(otp,email):
+#             error='Sending OTP  to your email failed'
+#             return render(request,'otp2.html',{'error':error})
+#         return redirect('verify_otp',email=email) 
         
 
-    # If GET request, render the profile page
-    return render(request, 'userprofile.html',{'active_tab': 'update-profile'})
+#     # If GET request, render the profile page
+#     return render(request, 'userprofile.html',{'active_tab': 'update-profile'})
 
+@login_required(login_url='login_user')
 def add_address(request):
     if not request.user.is_authenticated:
         return redirect('login_user')
@@ -132,16 +141,14 @@ def add_address(request):
         phonenumber = request.POST.get('phonenumber')
         print(fullname,city,state,postalcode,landmark,phonenumber)
         if not fullname or not city or not state or not postalcode or not landmark or not phonenumber:
-            error = 'every fields should be perfect '
+            error = 'every fields should be filled '
         if fullname.strip()=='':
             error = 'Enter a Valid Name'
         if len(fullname)<5:
             error = 'full name should be at least 5 letter'
         if any(char.isdigit() for char in fullname):
             error = 'Name cannot include numbers'
-        if error:
-            messages.error(request,error)
-            return render(request,'userprofile.html',{'active_tab': 'address','address':address })
+        
         
         if landmark.strip()=='':
             error = 'Enter a Valid landmark'
@@ -161,13 +168,7 @@ def add_address(request):
             error = 'phone number can only contain numbers'
         if   phonenumber.isdigit()==False:
             error = 'Enter a valid phonenumber'
-        if error:
-            messages.error(request,error)
-            return render(request,'userprofile.html',{'active_tab': 'address','address':address })
         
-
-
-
         if  len(postalcode)>6:
             error = 'enter a valid postal code'
         if   postalcode.isdigit() == False:
@@ -185,20 +186,30 @@ def add_address(request):
                                    landmark=landmark,phone_number=phonenumber).exists():
             error='addres already exists'
         if error:
-            messages.error(request,error)
-            return render(request,'userprofile.html',{'active_tab': 'address','address':address })
+            sample = {
+                'fullname':fullname,
+                'city':city,
+                'state':state,
+                'postalcode':postalcode,
+                'landmark':landmark,
+                'phonenumber':phonenumber,
+                'error':error
+            }
+            return render(request,'add_address.html',sample)
+        
+
         useraddress.objects.create(user=user,fullname=fullname,
                                    city=city,state=state,
                                    postal_code = postalcode,
                                    landmark=landmark,phone_number=phonenumber)
         
-        
+        request.session['active_tab']='address'
         
         return redirect('userprofile')
     
-    return render(request,'userprofile.html',{'active_tab': 'address','address':address})
+    return render(request,'add_address.html')
 
-
+@login_required(login_url='login_user')
 def editaddress(request, id):
     if not request.user.is_authenticated:
         return redirect('login_user')
@@ -260,15 +271,19 @@ def editaddress(request, id):
         
 
 
-        # Check if the address already exists (exclude the current address being edited)
         elif useraddress.objects.filter(user=user, fullname=fullname, city=city, state=state,
-                                        postal_code=postalcode, landmark=landmark, phone_number=phonenumber).exclude(id=id):
+                                        postal_code=postalcode, landmark=landmark, phone_number=phonenumber).exclude(id=id).exists():
             error = 'This address already exists.'
 
         if error:
-            messages.error(request,error)
-            return redirect('userprofile')
-        # If no errors, update the address
+
+            sample = {
+                "error":error,
+                'add':address
+            }
+            return render(request,'edit_address.html',sample)
+        
+
         print('===================================================')
         address.fullname = fullname
         address.city = city
@@ -277,26 +292,25 @@ def editaddress(request, id):
         address.postal_code = postalcode
         address.landmark = landmark
         address.phone_number = phonenumber
-        address.save()  # Save the updated address instance
+        address.save()  
         messages.success(request,'updated address')
-        # Redirect to the user profile or address list after success
-        return redirect('userprofile')  # Assuming the URL name for the profile page is 'userprofile'
+        return redirect('userprofile') 
 
-    # If GET request, render the address edit form with current details
-    return render(request, 'userprofile.html', {'active_tab': 'address', 'address': alpha})
+    return render(request,'edit_address.html',{'val':address})
 
 
-
+@login_required(login_url='login_user')
 def delete_address(request,id):
     if not request.user.is_authenticated:
         return redirect('login_user')
     alpha = get_object_or_404(useraddress,id=id)
     useraddress.objects.filter(id=alpha.id,user=request.user).delete()
-    address = useraddress.objects.filter(user=request.user).all()
-    return render(request,'userprofile.html',{'active_tab': 'address','address':address}) 
+    request.session['active_tab']='address'
+
+    return redirect('userprofile') 
 
 
-
+@login_required(login_url='login_user')
 def changepassword(request):
     if not request.user.is_authenticated:
         return redirect('login_user')
@@ -308,22 +322,35 @@ def changepassword(request):
         pass1 = request.POST.get('pass1')
         pass2 = request.POST.get('pass2')
         print(password,pass1,pass2)
-        messages.get_messages(request).used = True
-        if not  check_password(password,user.password):
-            error='password is  incorrect'
-        if pass1!=pass2:
+        if not password or not pass1 or not pass2:
+            error = 'all fields are maditory'
+        elif not  check_password(password,user.password):
+            error='Current  password is  incorrect'
+        elif len(pass1) < 8:
+            error = 'Password must be at least 8 characters long.'
+        elif not any(char.isupper() for char in pass1):
+            error = 'Password must contain at least one uppercase letter.'
+        elif not any(char.islower() for char in pass1):
+            error = 'Password must contain at least one lowercase letter.'
+        elif not any(char.isdigit() for char in pass1):
+            error = 'Password must contain at least one digit.'
+        elif not any(char in "!@#$%^&*()_" for char in pass1):
+            error = 'Password must contain at least one special character.'
+        
+        elif pass1!=pass2:
             error='password does not match'
         if error :
+            request.session['active_tab']='change-password'
             messages.error(request,error)
-            return render(request,'userprofile.html',{'active_tab': 'change-password','address':address})
+            
+            return redirect('userprofile')
         user.password = make_password(pass1)
         user.save()
         login(request, user)
         print('sucess========================================================================================')
         success = 'the password is changed success'
         messages.success(request,success)
-        return render(request,'userprofile.html',{'active_tab': 'change-password','address':address,})
-
+        return redirect('userprofile')
     
     return render(request,'userprofile.html',{'active_tab': 'change-password','address':address})
 

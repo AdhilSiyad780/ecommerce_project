@@ -23,19 +23,20 @@
                   {% csrf_token %}
                   <div class="mb-4">
                       <label for="product_name" class="form-label">Name</label>
-                      <input type="text" name="name" placeholder="Type here" class="form-control" id="product_name" required />
+                      <input type="text" name="name" placeholder="Type here" class="form-control" id="product_name" required  value="{{name}}" />
                   </div>
                   <div class="mb-4">
                       <label for="product_slug" class="form-label">Description</label>
-                      <input type="text" name="description" placeholder="Type here" class="form-control" id="product_slug" />
+                      <input type="text" name="description" placeholder="Type here" class="form-control" id="product_slug" required value="{{description}}" />
                   </div>
                   <div class="mb-4">
                       <label for="product_image" class="form-label">Image</label>
-                      <input type="file" name="image" class="form-control" id="product_image" accept="image/*" required />
+                      <input type="file" name="image" class="form-control" id="product_image" accept="image/*" required  value="" />
+
                   </div>
                   <div class="mb-4">
                       <label for="offer" class="form-label">Offer</label>
-                      <textarea name="offer" placeholder="Type here" class="form-control" id="product_offer" required ></textarea>
+                      <input name="offer" placeholder="Type here" class="form-control" id="product_offer" required  value="{{offer}}" ></input>
                   </div>
                   <div class="d-grid">
                     {% if createerror %}

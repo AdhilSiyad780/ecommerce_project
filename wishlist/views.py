@@ -6,9 +6,11 @@ from django.contrib import messages
 from django.http import JsonResponse
 from cart.models import Cart,Cartitems
 from cart.views import addcart
+from django.contrib.auth.decorators import login_required
+
 
 # Create your views here.
-
+@login_required(login_url='login_user')
 def wishlist(request):
     if not request.user.is_authenticated:
         return redirect('login_user')
@@ -27,7 +29,7 @@ def wishlist(request):
     
     return render(request,'wishlist.html',context)
 
-
+@login_required(login_url='login_user')
 def add_wishlist(request,id):
     if not request.user.is_authenticated:
         return redirect('login_user')
@@ -64,6 +66,7 @@ def add_wishlist(request,id):
 
     return render(request,'wishlist.html',context)
 
+@login_required(login_url='login_user')
 def add_wishlist_from_product_details(request,id,size):
     if not request.user.is_authenticated:
         return redirect('login_user')
@@ -79,12 +82,14 @@ def add_wishlist_from_product_details(request,id,size):
 
     return redirect('product_details',id)
 
+@login_required(login_url='login_user')
 def delete_wishlist(request,id):
     if not request.user.is_authenticated:
         return redirect('login_user')
     Wishlistitems.objects.filter(id=id).delete()
     return redirect('wishlist')
 
+@login_required(login_url='login_user')
 def wishlist_to_cart(request,id):
     if not request.user.is_authenticated:
         return redirect('login_user')

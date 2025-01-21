@@ -9,11 +9,14 @@ from django.template.loader import render_to_string
 from xhtml2pdf import pisa
 from django.db.models import Q
 from django.utils.timezone import now, make_aware
+from django.contrib.auth.decorators import login_required
+
 
 
 
 
 # Create your views here.
+@login_required(login_url='adminlogin')
 def transaction_list(request):
 
     alpha = transactions.objects.all()
@@ -28,6 +31,7 @@ def transaction_list(request):
     
     return render(request,'admin/transaction.html',{'items':alpha})
 
+@login_required(login_url='adminlogin')
 def download_sales_excel(request):
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
@@ -39,17 +43,16 @@ def download_sales_excel(request):
     if end_date:
         end_date = make_aware(datetime.strptime(end_date, '%Y-%m-%d').replace(hour=23, minute=59, second=59))
 
-# Apply range logic only if user-provided dates are missing
     if not start_date or not end_date:
         if range_option == 'daily':
-            end_date = now()  # Current timezone-aware datetime
-            start_date = end_date.replace(hour=0, minute=0, second=0, microsecond=0)  # Start of day
+            end_date = now()  
+            start_date = end_date.replace(hour=0, minute=0, second=0, microsecond=0) 
         elif range_option == 'weekly':
-            end_date = now()  # Current timezone-aware datetime
-            start_date = (end_date - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)  # Start of week
+            end_date = now()  
+            start_date = (end_date - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0) 
         elif range_option == 'yearly':
-            end_date = now()  # Current timezone-aware datetime
-            start_date = now().replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)  # Start of year
+            end_date = now() 
+            start_date = now().replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0) 
 
 
     if start_date and end_date:
@@ -86,6 +89,8 @@ def download_sales_excel(request):
         sample.to_excel(writer, index=False, sheet_name='Sales Report')
     return response
 
+
+@login_required(login_url='adminlogin')
 def download_sales_pdf(request):
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
@@ -99,17 +104,17 @@ def download_sales_pdf(request):
     if end_date:
         end_date = make_aware(datetime.strptime(end_date, '%Y-%m-%d').replace(hour=23, minute=59, second=59))
 
-# Apply range logic only if user-provided dates are missing
+
     if not start_date or not end_date:
         if range_option == 'daily':
-            end_date = now()  # Current timezone-aware datetime
-            start_date = end_date.replace(hour=0, minute=0, second=0, microsecond=0)  # Start of day
+            end_date = now() 
+            start_date = end_date.replace(hour=0, minute=0, second=0, microsecond=0) 
         elif range_option == 'weekly':
-            end_date = now()  # Current timezone-aware datetime
-            start_date = (end_date - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)  # Start of week
+            end_date = now() 
+            start_date = (end_date - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)  
         elif range_option == 'yearly':
-            end_date = now()  # Current timezone-aware datetime
-            start_date = now().replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)  # Start of year
+            end_date = now() 
+            start_date = now().replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)  
 
 
     if start_date and end_date:

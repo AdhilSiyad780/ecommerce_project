@@ -24,6 +24,8 @@ from transaction.models import transactions
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django.urls import reverse
+from allauth.socialaccount.models import SocialAccount
+from django.contrib.auth.decorators import login_required
 
 
 
@@ -31,8 +33,7 @@ from django.urls import reverse
 
 
 
-
-
+@login_required(login_url='login_user')
 def placeorder(request):
     
     if not request.user.is_authenticated:
@@ -58,12 +59,12 @@ def placeorder(request):
             messages.error(request, 'Your cart is empty. Please add items before proceeding.')
             return redirect('checkout')
 
-        items = Cartitems.objects.filter(cart=gama)
+        items = Cartitems.objects.filter(cart=gama,product__is_active=True,product__catagory__is_active=True)
         coupon_obj = None
         # Calculate the cart total
         real_price = cart_total_cal(request)
         
-
+        
         print('cart total:',cart_total)
         applied_coupon = request.session.get('applied_coupon', None)
         coupon = None
@@ -101,7 +102,7 @@ def placeorder(request):
 
                 messages.error(request,'COD only availabe for purchase above 1000 rupees')
                 return redirect('checkout')
-
+        print('realprice',real_price)
         # Razorpay integration for online payment
         if payment_type == 'razorpay':
             order = AlOrder.objects.create(
@@ -134,16 +135,16 @@ def placeorder(request):
                 request.session['razorpay_order_id'] = razorpay_order['id']
                 request.session['address_selected'] = address_id
                 
-                print('2222222222222222222222222222222222222222')
-                success,error = _finalize_order(request, items, order)
-                print(cart_total)
-                if not success:
-                    messages.error(request,error)
-                    return redirect('checkout')
+                # print('2222222222222222222222222222222222222222')
+                # success,error = _finalize_order(request, items, order)
+                # print(cart_total)
+                # if not success:
+                #     messages.error(request,error)
+                #     return redirect('checkout')
                 return render(request, 'payment_page.html', {
                     'razorpay_order_id': razorpay_order['id'],
                     'razorpay_key': settings.RAZORPAY_KEY_ID,
-                    'amount':cart_total ,
+                    'amount':round(cart_total) ,
                     'user_email': request.user.email,
                     'user_contact': address_id,  
                     'order':order,
@@ -195,13 +196,13 @@ def placeorder(request):
 
     return redirect('checkout')
 
-
 def _finalize_order(request, items, order):
     print("this is _finalize_order func")
     """Helper function to finalize the order: deduct stock and clear cart."""
     try:
         with transaction.atomic():
             for item in items:
+                
                 print('========================= product reached')
                 product = item.product
                 size_variant = product.size_variant.filter(size=item.size).first()
@@ -214,23 +215,41 @@ def _finalize_order(request, items, order):
                         return False,error
                     size_variant.stock -= item.quantity
                     size_variant.save()
+                    real_price = Decimal(order.real_price)
+                    print('real price',real_price)
+                    minus = item.product.offer*(Decimal(item.product.catagory.offer)/100)
+                    item_price = item.product.offer-minus
+                    price = item_price*item.quantity
+                    print('price',price)
+                    
+                    if order.coupon:
+                        price_ = item_price*item.quantity
+                        aldiscount = price_*(Decimal(order.coupon.discount_value)/100)
+                        price-=aldiscount
+                        
+
+                    
+
+
                 AlOrderItem.objects.create(
                     order=order,
                     product=product,
                     quantity=item.quantity,
-                    price=product.price,
+                    price=price,
                     size_variant=size_variant,
                 )
                 print('========================================product added')
+                
             # Clear cart
                 Cart.objects.filter(user=request.user).delete()
                 print('cart is deleted======================================================')
         return True, None 
     except Exception as error:
+        print(error)
         return False,error
 
 
-
+@login_required(login_url='login_user')
 def razorpay_callback(request,id):
     print("this is razorpay_callback func")
     if not request.user.is_authenticated:
@@ -261,10 +280,15 @@ def razorpay_callback(request,id):
             items = Cartitems.objects.filter(cart=gama)
 
             
-            
-           
+            success,error = _finalize_order(request, items, order)
+            if not success:
+                messages.error(request,error)
+                return redirect('checkout')
             order.razorpay_order_id=razorpay_order_id
             print('razorpay_order_id have been asigned')
+
+
+            
             order.status = 'completed'
             order.payment_method = 'razorpay'
             print('order status changed to completed')
@@ -294,12 +318,16 @@ def razorpay_callback(request,id):
             return JsonResponse({"status": "failure", "error": str(e)})
 
     return redirect('checkout')
+
+@login_required(login_url='login_user')
 def success(request,order_id):
     print("this is success page")
     if not request.user.is_authenticated:
         return redirect('login_user')
     order = AlOrder.objects.get(id=order_id)
     return render(request,'success.html',{'order':order})
+
+@login_required(login_url='login_user')
 def failure(request,id):
     print("this is failure page")
     try:
@@ -310,6 +338,7 @@ def failure(request,id):
     return render(request,'failure.html')
 
 
+@login_required(login_url='login_user')
 def apply_coupon(request):
     if not request.user.is_authenticated:
         return redirect('login_user')
@@ -344,6 +373,8 @@ def apply_coupon(request):
 
     return redirect('checkout')
 
+
+@login_required(login_url='login_user')
 def orderlist(request):
     details = AlOrder.objects.filter(user=request.user).all()
     context = {
@@ -353,6 +384,7 @@ def orderlist(request):
 
     return render(request,'userprofile.html',context)
 
+@login_required(login_url='login_user')
 def orderdetails(request,id):
     if not request.user.is_authenticated:
         return redirect('login_user')
@@ -371,13 +403,16 @@ def orderdetails(request,id):
 
 
 
-
+@login_required(login_url='login_user')
 def  cancel_order(request, id):
     # Fetch the order
     if not request.user.is_authenticated:
         return redirect('login_user')
     order = get_object_or_404(AlOrder, id=id, user=request.user)
     reason = request.POST.get('reason')
+    if not reason.strip() or len(reason.strip()) < 10:
+        messages.error(request, 'Please provide a valid reason ')
+        return redirect('orderdetails', id)
 
     # Check if the order is still pending
     if order.status == 'pending' or order.status == 'completed':
@@ -392,20 +427,20 @@ def  cancel_order(request, id):
                         size_variant.stock += item.quantity
                         size_variant.save()
                 if order.status=='completed':
-                    thewallet, created = wallet.objects.get_or_create(user=request.user, defaults={'balance': Decimal('0')})
-                    thewallet.balance += order.total_price
+                    thewallet, created = wallet.objects.get_or_create(user=order.user.id, defaults={'balance': Decimal('0')})
+                    thewallet.balance += order.real_price
                     thewallet.save()
-                    transactions.objects.create(user=request.user,order=order,payment_type='razorpay',amount=order.total_price,
+                    transactions.objects.create(user=order.user,order=order,payment_type='razorpay',amount=order.real_price,
                                         status='Canceled')
                 # Update the order status to 'canceled'
                 order.status = 'canceled'
                 order.reason=reason
                 order.save()
-                # Delete a specific session key
                
  
             messages.success(request, 'Your order has been successfully canceled, and stock has been updated.')
         except Exception as e:
+            print(e)
             messages.error(request, f'Error occurred while canceling the order: {str(e)}')
     else:
         messages.error(request, 'You cannot cancel this order as it is no longer pending.')
@@ -414,12 +449,25 @@ def  cancel_order(request, id):
     return redirect('orderdetails',id=id)
 
 # ============================================admin=======================admin===================================================
-
+@login_required(login_url='adminlogin')
 def admin_order_list(request):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
+    the_mail = None
     search_query = request.GET.get('search', '').strip()
     alpha = AlOrder.objects.order_by('-id').all()
+    for val in alpha:
+        if not val.user.email:
+            
+            try:
+                social = SocialAccount.objects.get(user=val.user,provider='google')
+                the_mail = social.extra_data.get('email')
+            except SocialAccount.DoesNotExist:
+                the_mail = None
+            if the_mail:
+                val.user.email=the_mail
+                val.save()
+    
     if search_query:
         alpha = alpha.filter(
             Q(id__icontains=search_query) |
@@ -437,16 +485,19 @@ def admin_order_list(request):
     }
     return render(request,'admin/orders_list.html',context)
 
+@login_required(login_url='adminlogin')
 def admin_order_details(request,id):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
     try:
         alpha = get_object_or_404(AlOrder,id=id)
     except AlOrder.DoesNotExist:
-        # return JsonResponse({'error':'does not exists'},status=400)
+        
         return render(request,'admin/order_edit.html',{'item':alpha})
     return render(request,'admin/order_edit.html',{'item':alpha})
 
+
+@login_required(login_url='login_user')
 def indiviudalcancel(request,id,id2):
     if not request.user.is_authenticated:
         return redirect('login_user')
@@ -454,34 +505,25 @@ def indiviudalcancel(request,id,id2):
     order = get_object_or_404(AlOrder,id=id)
     item = get_object_or_404(AlOrderItem,id=id2)
     items = AlOrderItem.objects.filter(order=order).all()
-    reason = request.POST.get('reason')
-    
+    reason = request.GET.get('reason', '').strip()
+
+        # Validate the reason
+    if not reason or len(reason) < 10:
+        messages.error(request, 'Please provide a valid reason ')
+        return redirect('orderdetails', id)
+        
    
     if order.status == 'completed' :
         cart = order.real_price
         if order.coupon:
-            print(cart)
-            real_price = Decimal(order.real_price)
-            print('real price',real_price)
-            minus = item.product.offer*(Decimal(item.product.catagory.offer)/100)
-            item_price = item.product.offer-minus
-            print(f'item_price:{item_price}')
-            discount = Decimal(real_price) * (Decimal(order.coupon.discount_value) / Decimal(100))
-            print(f' discount: {discount}')
-       
-            total_quantity = AlOrderItem.objects.filter(order=order).aggregate(Sum('quantity'))['quantity__sum']
-            # print(f'item name : {item.name}')
-            print(f'total_quantity{total_quantity}')
-            single = discount/total_quantity
-            print(f'single{single}')
-            reductable_amount = (item_price*item.quantity)-(item.quantity*single)
-            print(f'reductable_amount{reductable_amount}')
 
-            
-            
+            reductable_amount = item.price
+            print('reductable amount',reductable_amount)
+
             size_variant = item.size_variant
             if size_variant:
                         # Increase the stock by the quantity in the order
+
                 size_variant.stock += item.quantity
                 size_variant.save()
                 item.reason = reason
@@ -499,11 +541,8 @@ def indiviudalcancel(request,id,id2):
             order.total_price -= reductable_amount
             order.save()
         else:
-            minus = item.product.offer*(Decimal(item.product.catagory.offer)/100)
-            item_price = item.product.offer-minus
-            reductable_amount=item_price*item.quantity
+            reductable_amount = item.price
             print('reductable amount',reductable_amount)
-
 
             thewallet, created = wallet.objects.get_or_create(user=request.user, defaults={'balance': Decimal('0')})
             thewallet.balance += reductable_amount
@@ -529,22 +568,9 @@ def indiviudalcancel(request,id,id2):
         cart = order.real_price
         if order.coupon:
             print(cart)
-            real_price = Decimal(order.real_price)
-            print('real price',real_price)
-            minus = item.product.offer*(Decimal(item.product.catagory.offer)/100)
-            item_price = item.product.offer-minus
-            print(f'item_price:{item_price}')
-            discount = Decimal(real_price) * (Decimal(order.coupon.discount_value) / Decimal(100))
-            print(f' discount: {discount}')
-       
-            total_quantity = AlOrderItem.objects.filter(order=order).aggregate(Sum('quantity'))['quantity__sum']
-            # print(f'item name : {item.name}')
-            print(f'total_quantity{total_quantity}')
-            single = discount/total_quantity
-            print(f'single{single}')
-            reductable_amount = (item_price*item.quantity)-(item.quantity*single)
-            print(f'reductable_amount{reductable_amount}')
-
+            reductable_amount = item.price
+            print('reductable amount',reductable_amount)
+            
             
             size_variant = item.size_variant
             if (items.filter(status='cancelled').count())+1==items.count():
@@ -556,8 +582,7 @@ def indiviudalcancel(request,id,id2):
                 size_variant.stock += item.quantity
                 size_variant.save()
                 item.save()
-            print(f'order price{item_price*item.quantity} - reductable amiunt{reductable_amount}')
-
+            
             order.total_price-=reductable_amount
             print(order.total_price)
 
@@ -582,9 +607,11 @@ def indiviudalcancel(request,id,id2):
     order.save()
     item.status='cancelled'
     item.save()
-
+    messages.success(request,'Item canceled succesfully')
     return redirect('orderdetails',id=order.id)
 
+
+@login_required(login_url='login_user')
 def individual_return(request,id,id2):
     if not request.user.is_authenticated:
         return redirect('login_user')
@@ -592,27 +619,21 @@ def individual_return(request,id,id2):
     order = get_object_or_404(AlOrder,id=id)
     item = get_object_or_404(AlOrderItem,id=id2)
     items = AlOrderItem.objects.filter(order=order).all()
+    reason = request.POST.get('reason')
     cart = cart_total_cal(request)
     cart = order.real_price
-    if order.coupon:
-        print(cart)
-        real_price = Decimal(order.real_price)
-        print('real price',real_price)
-        minus = item.product.offer*(Decimal(item.product.catagory.offer)/100)
-        item_price = item.product.offer-minus
-        print(f'item_price:{item_price}')
-        discount = Decimal(real_price) * (Decimal(order.coupon.discount_value) / Decimal(100))
-        print(f' discount: {discount}')
-       
-        total_quantity = AlOrderItem.objects.filter(order=order).aggregate(Sum('quantity'))['quantity__sum']
-            # print(f'item name : {item.name}')
-        print(f'total_quantity{total_quantity}')
-        single = discount/total_quantity
-        print(f'single{single}')
-        reductable_amount = (item_price*item.quantity)-(item.quantity*single)
-        print(f'reductable_amount{reductable_amount}')
+    print('etheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
+    if item.status=='pending':
+        item.status='requested'
+        print('etheeeeeeeeeeeeeeeee3222222222222222222222222eeeeeeeeeeeeeeeeeeeeeeee')
+        item.save()
+        return redirect('orderdetails',id=order.id)
 
-            
+    if order.coupon:
+        reductable_amount = item.price
+        print('reductable amount',reductable_amount)
+
+        
             
         size_variant = item.size_variant
         if (items.filter(status='returned').count())+1==items.count():
@@ -637,7 +658,9 @@ def individual_return(request,id,id2):
         order.save()
     else:
 
-        reductable_amount=item.product.offer*item.quantity
+        reductable_amount = item.price
+        print('reductable amount',reductable_amount)
+
         thewallet, created = wallet.objects.get_or_create(user=request.user, defaults={'balance': Decimal('0')})
         thewallet.balance += reductable_amount
         thewallet.save()
@@ -661,8 +684,9 @@ def individual_return(request,id,id2):
 
 
 
-    return redirect('orderdetails',id=order.id)
+    return redirect('admin_order_details',id=order.id)
 
+@login_required(login_url='adminlogin')
 def change_order_status(request,id):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
@@ -672,16 +696,19 @@ def change_order_status(request,id):
         if alpha.status == 'pending' or alpha.status=='completed':
             alpha.status=newstatus
             alpha.save()
-        messages.error(request,'only change the order if the order is pending')
 
     return redirect('admin_order_list')
 
 
+@login_required(login_url='login_user')
 def add_address_checkout(request):
     if not request.user.is_authenticated:
         return redirect('login_user')
    
-    
+    data = request.session.get('form-data',{})
+    if data:
+        del request.session['form-data']
+        
     kerala_districts = [
     "alappuzha", "ernakulam", "idukki", "kottayam", "kozhikode", 
     "malappuram", "palakkad", "pathanamthitta", "thiruvananthapuram", 
@@ -759,7 +786,16 @@ def add_address_checkout(request):
                                    landmark=landmark,phone_number=phonenumber).exists():
             error='addres already exists'
         if error:
-            messages.error(request,error)
+            request.session['form-data']= {
+                'dropdown_open':True,
+                'fullname':fullname,
+                'city':city,
+                'state':state,
+                'postal_code':postalcode,
+                'landmark':landmark,
+                'phonenumber':phonenumber,
+                'error':error
+            }
             return redirect('checkout')
         useraddress.objects.create(user=user,fullname=fullname,
                                    city=city,state=state,
@@ -771,9 +807,13 @@ def add_address_checkout(request):
         return redirect('checkout')
     
     return redirect('checkout')
+
+
 def admin_review(request):
     return render(request,'admin/page-reviews.html')
 
+
+@login_required(login_url='login_user')
 def review(request,id,id2):
     print('=======================================')
     try:
@@ -809,7 +849,7 @@ def review(request,id,id2):
     return redirect('orderdetails',id=order.id)
 
 
-
+@login_required(login_url='login_user')
 def invoice_download(request,id):
     if not request.user.is_authenticated:
         return redirect('login_user')
@@ -828,6 +868,7 @@ def invoice_download(request,id):
 
     return response
 
+@login_required(login_url='login_user')
 def retry_razorpay_payment(request,id):
     print('this is razorpay retry')
     order = get_object_or_404(AlOrder,id=id)
@@ -858,4 +899,53 @@ def retry_razorpay_payment(request,id):
         messages.error(request, f"Error creating Razorpay order: {str(e)}")
         return redirect('orderdetails' ,id=order.id)
     
+
+@login_required(login_url='login_user')
+def  return_order(request, id):
+    if not request.user.is_authenticated:
+        return redirect('login_user')
+    order = get_object_or_404(AlOrder, id=id)
+    print('etheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
+    reason = request.POST.get('reason')
+    if not order.request:
+        order.request = 'requested'
+        order.save()
+        return redirect('orderdetails',id=id)
     
+    
+    if order.status == 'delivered':
+        print('==============////////////////////////==========================================================')
+        try:
+            with transaction.atomic():
+
+                for item in order.items.all():
+                    item.status = 'Returned'
+                    item.save()
+                    size_variant = item.size_variant
+                    if size_variant:
+                        
+                        size_variant.stock += item.quantity
+                        size_variant.save()
+                
+                thewallet, created = wallet.objects.get_or_create(user=order.user.id, defaults={'balance': Decimal('0')})
+                thewallet.balance += order.real_price
+                thewallet.save()
+                transactions.objects.create(user=order.user,order=order,payment_type='razorpay',amount=order.real_price,
+                                        status='Returned')
+                
+                order.status = 'returned'
+                order.request = None
+                order.save()
+              
+               
+ 
+            messages.success(request, 'Your order has been successfully canceled, and stock has been updated.')
+        except Exception as e:
+            print(f'Error occurred while canceling the order: {str(e)}')
+    else:
+        messages.error(request, 'You cannot cancel this order as it is no longer pending.')
+
+    
+    return redirect('admin_order_details',id=order.id)
+
+# ==========

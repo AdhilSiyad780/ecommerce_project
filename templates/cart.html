@@ -82,6 +82,93 @@
 
 </script>
 <style>
+  responsive-cart {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.responsive-cart table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.responsive-cart th,
+.responsive-cart td {
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.responsive-cart .table__img {
+  max-width: 100px;
+  height: auto;
+}
+
+.quantity-control {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+}
+
+.quantity-btn {
+  padding: 5px 10px;
+  font-size: 16px;
+  cursor: pointer;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 768px) {
+  .responsive-cart table,
+  .responsive-cart thead,
+  .responsive-cart tbody,
+  .responsive-cart tr,
+  .responsive-cart th,
+  .responsive-cart td {
+    display: block;
+  }
+  
+  .responsive-cart thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  
+  .responsive-cart tr {
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    padding: 0.5rem;
+    background: #fff;
+  }
+  
+  .responsive-cart td {
+    position: relative;
+    padding-left: 50%;
+    padding-bottom: 0.5rem;
+    border: none;
+  }
+  
+  .responsive-cart td:before {
+    position: absolute;
+    left: 0.75rem;
+    width: 45%;
+    padding-right: 10px;
+    font-weight: bold;
+    content: attr(data-label);
+  }
+  
+  .responsive-cart .quantity-control {
+    justify-content: flex-start;
+  }
+  
+  .responsive-cart .table__img {
+    max-width: 150px;
+    margin: 0 auto;
+    display: block;
+  }
+}
   /* Quantity Control Container */
 .quantity-control {
     display: flex;
@@ -260,90 +347,94 @@ table, tr, td {
 
 
 <main class="main">
+  <section class="breadcrumb">
+    <ul class="breadcrumb__list flex container">
+      <li><a href="{% url 'index' %}" class="breadcrumb__link">Home</a></li>
+      <li><span class="breadcrumb__link"></span>></li>
+      <li><a href="{% url 'display_products' %}"><span class="breadcrumb__link">Shop</span></a></li>
+      <li><span class="breadcrumb__link"></span>></li>
+      <li><span class="breadcrumb__link">Cart</span></li>
+    </ul>
+  </section>
   <section class="cart section--sm container">
     <div class="table__container" style="">
-      <table class="table" style="width: 100%; table-layout: fixed;">
-        <thead>
-          <tr>
-            <th style="width: 20%;">Image</th>
-            <th>Size</th>
-            <th>Offer Price</th>
-            <th>Quantity</th>
-            <th>Remove</th>
+      
+<div class="responsive-cart">
+  <table>
+    <thead>
+      <tr>
+        <th>Image</th>
+        <th>Size</th>
+        <th>Offer Price</th>
+        <th>Quantity</th>
+        <th>Remove</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if items %}
+        {% for entry in items %}
+          <tr id="cart-item-{{ entry.item.id }}" data-item-id="{{ entry.item.id }}">
+            <td data-label="Image">
+              <img src="{{ entry.item.product.image1.url }}" alt="" class="table__img" />
+            </td>
+            <td data-label="Size">
+              <div>{{ entry.item.size }}</div>
+              {% if entry.stock == 0 %}
+                <div style="font-size: 14px; color: red;">Out of stock</div>
+              {% elif entry.stock < 5 %}
+                <div style="font-size: 14px; color: red;">Only {{entry.stock}} left</div>
+              {% else %}
+                <div style="font-size: 14px; color: green;">available</div>
+              {% endif %}
+              <div style="color:rgb(60, 0, 255);">
+                Category: {{ entry.item.product.catagory.offer|floatformat:-0 }}% off
+              </div>
+            </td>
+            <td data-label="Offer Price">
+              <span class="table__price">${{ entry.item.product.offer }}</span>
+            </td>
+            <td data-label="Quantity">
+              <div class="quantity-control">
+                <button 
+                  class="quantity-btn decrease"
+                  hx-post="{% url 'update_cart' id=entry.item.id %}"
+                  hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                  hx-vals='{"action": "decrease"}'
+                  hx-target="#cart-item-{{ entry.item.id }}"
+                  hx-swap="none" 
+                  hx-on="htmx:afterRequest: processResponse(event)">
+                  -
+                </button>
+                <span id="quantity-{{ entry.item.id }}">
+                  {{ entry.item.quantity }}
+                </span>
+                <button 
+                  class="quantity-btn increase"
+                  hx-post="{% url 'update_cart' id=entry.item.id %}"
+                  hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                  hx-vals='{"action": "increase"}'
+                  hx-target="#cart-item-{{ entry.item.id }}"
+                  hx-swap="none" 
+                  hx-on="htmx:afterRequest: processResponse(event)">
+                  +
+                </button>
+              </div>
+            </td>
+            <td data-label="Remove">
+              <a href="{% url 'deletecart' id=entry.item.id %}" onclick="return confirm('Are you sure you want to delete this item?')">
+                <i class="material-icons table__trash">delete</i>
+              </a>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {% if items %}
-            {% for entry in items %}
-              <tr id="cart-item-{{ entry.item.id }}" data-item-id="{{ entry.item.id }}">
-                <td>
-                  <img src="{{ entry.item.product.image1.url }}" alt="" class="table__img" style="max-width: 100%; height: auto;" />
-                </td>
-                <td>
-                  <div>{{ entry.item.size }}</div>
-                  {% if entry.stock == 0 %}
-                  <div style="font-size: 14px; color: red;">Out of stock</div>
-                  {% elif entry.stock < 5 %}
-                  <div style="font-size: 14px; color: red;">Only {{entry.stock}} left</div>
-                  {% else %}
-                  <div style="font-size: 14px; color: green;">available</div>
-                  {% endif %}
-                  <div style="color:rgb(60, 0, 255);">
-                    Category: {{ entry.item.product.catagory.offer|floatformat:-0 }}% off 
-                   
-                  </div>
-
-              </td>
-              
-                <td>
-                  <span class="table__price">${{ entry.item.product.offer }}</span>
-                </td>
-                <td>
-                  <div class="quantity-control" style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-                    <button 
-                      class="quantity-btn decrease"
-                      hx-post="{% url 'update_cart' id=entry.item.id %}"
-                      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
-                      hx-vals='{"action": "decrease"}'
-                      hx-target="#cart-item-{{ entry.item.id }}"
-                      hx-swap="none" 
-                      hx-on="htmx:afterRequest: processResponse(event)"
-                      style="padding: 5px 10px; font-size: 16px; cursor: pointer;">
-                      -
-                    </button>
-                    <span id="quantity-{{ entry.item.id }}" style="min-width: 30px; text-align: center;">
-                      {{ entry.item.quantity }}
-                    </span>
-                    <button 
-                      class="quantity-btn increase"
-                      hx-post="{% url 'update_cart' id=entry.item.id %}"
-                      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
-                      hx-vals='{"action": "increase"}'
-                      hx-target="#cart-item-{{ entry.item.id }}"
-                      hx-swap="none" 
-                      hx-on="htmx:afterRequest: processResponse(event)"
-                      style="padding: 5px 10px; font-size: 16px; cursor: pointer;">
-                      +
-                    </button>
-                  </div>
-                </td>
-                
-               
-                <td>
-                  <a href="{% url 'deletecart' id=entry.item.id %}" onclick="return confirm('Are you sure you want to delete this item?')">
-                    <i class="material-icons table__trash">delete</i>
-                  </a>
-                </td>
-                
-              </tr>
-            {% endfor %}
-          {% else %}
-            <tr>
-              <td colspan="7">Cart is empty</td>
-            </tr>
-          {% endif %}
-        </tbody>
-      </table>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="5">Cart is empty</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
     </div>
 
     <div class="cart__total">

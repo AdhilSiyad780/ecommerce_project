@@ -29,12 +29,12 @@
                                         <div class="col-lg-4">
                                             <div class="mb-4">
                                                 <label class="form-label">Add  Stock</label>
-                                                <input placeholder=""  value="{{ alpha.stock }}"  type="text" name="stock" class="form-control" />
+                                                <input placeholder=""  value="{{ alpha.stock }}"  type="text" name="stock" class="form-control"  />
                                             </div>
                                         </div>
                                         <div class="col-lg-4">
                                             <label class="form-label">Size</label>
-                                            <select class="form-control" name="size" id="edit_size" required>
+                                            <select class="form-control" name="size" id="edit_size" >
                                                 <option value="S" {% if alpha.size == 'S' %}selected{% endif %}>S</option>
                                                 <option value="M" {% if alpha.size == 'M' %}selected{% endif %}>M</option>
                                                 <option value="L" {% if alpha.size == 'L' %}selected{% endif %}>L</option>

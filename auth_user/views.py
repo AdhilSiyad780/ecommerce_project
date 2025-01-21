@@ -15,6 +15,8 @@ from Coupons.models import wallet
 from transaction.models import transactions
 from django.utils.crypto import get_random_string
 import re
+from django.contrib.auth.decorators import login_required
+
 
 
 
@@ -51,6 +53,7 @@ def signup(request):
         pass1 = request.POST.get('pass1')
         pass2 = request.POST.get('pass2')
         refferal = request.POST.get('Refferal',None)
+       
         if not username:
             theerror = 'username is manditory'
         elif len(username)<=8:
@@ -60,7 +63,10 @@ def signup(request):
         elif username.strip()== '' :
             theerror = 'username cannot be whitespace'
         if theerror:
-            return render(request,'signup.html',{'username':username,'usererror':theerror} )
+            
+            return render(request,'signup.html',{'username':username,
+                                                 "email":email,'pass1':pass1,'pass2':pass2,
+                                                 'refferal':refferal,'usererror':theerror} )
         
         
         elif not email:
@@ -75,7 +81,10 @@ def signup(request):
         if not re.match(email_regex, email):
             error = 'Enter a valid email address.'
         if theerror:
-            return render(request,'signup.html',{'username':username,'email':email,'emailerror':theerror} )
+            return render(request,'signup.html',{'username':username,
+                                                 "email":email,'pass1':pass1,'pass2':pass2,
+                                                 'refferal':refferal,'emailerror':theerror} )
+        
         
 
         elif len(pass1) < 8:
@@ -91,19 +100,21 @@ def signup(request):
         elif pass1!=pass2:
             theerror = 'your passwords does not match'
         if theerror:
-            return render(request,'signup.html',{'username':username,'email':email,'passerror':theerror} )
+            return render(request,'signup.html',{'username':username,
+                                                 "email":email,'pass1':pass1,'pass2':pass2,
+                                                 'refferal':refferal,'passerror':theerror} )
+        
         
         if refferal and not Refferal.objects.filter(refferal_code=refferal).exists():
             theerror = 'invalid Refferal code'
         if theerror:
-            return render(request,'signup.html',{'username':username,'email':email,'refererror':theerror})
+            return render(request,'signup.html',{'username':username,
+                                                 "email":email,'pass1':pass1,'pass2':pass2,
+                                                 'refferal':refferal,'reffererror':theerror} )
+        
         
 
         
-        
-         
-
-    
 
         #password=================================validation
         # usernaem ================================ validation 
@@ -135,6 +146,8 @@ def signup(request):
     return render(request,'signup.html')
         
 def verify_otp(request, email):
+    if  request.user.is_authenticated:
+        return redirect('index')
     try:
         print('=====================================================================================1')
         registration = request.session['registration']
@@ -160,7 +173,7 @@ def verify_otp(request, email):
                 })
             if str(otp_real.otp)==enter_otp:
 
-                user = User.objects.create_user(username=registration['username']
+                user = User.objects.create(username=registration['username']
                                                 ,email=registration['email']
                                                 ,password=registration['password'])
             
@@ -230,6 +243,8 @@ def verify_otp(request, email):
    
 def resend_otp(request,email):
     print(email)
+    if  request.user.is_authenticated:
+        return redirect('index')
     
     try:
    
@@ -279,7 +294,7 @@ def login_user(request):
         return redirect('index')
     error = ' '
     if request.method == "POST":
-        username = request.POST.get('email')
+        username = request.POST.get('username')
         pass1 = request.POST.get('pass')
         
         
@@ -290,36 +305,48 @@ def login_user(request):
             login(request,user)
             return redirect('index')
         else:
+            context = {
+                'username':username,
+                'pass':pass1
+            }
             messages.error(request, 'Invalid credentials, please try again.')
-            return render(request,'login.html')
+            return render(request,'login.html',context)
             
     return render(request,'login.html')
+
 def home(request):
     alpha = catagory.objects.filter(is_active=True)
     arrivals = Products.objects.filter(is_active=True,catagory__is_active=True).order_by('-id')[:4]
     Product6 = Products.objects.filter(is_active=True,catagory__is_active=True).all()[:6]
     return render(request,'index.html',{'item':alpha,'newarrivals':arrivals,'product6':Product6})
 
+@login_required(login_url='login_user')
 def logout_user(request):
     logout(request)
     return redirect('login_user')
 
+
 def forgot_password(request):
-    if not request.user.is_authenticated:
-        return redirect('login_user')
-    print('=======================1==============1=========1============1================')
+    if  request.user.is_authenticated:
+        return redirect('index')
     
+    print('=======================1==============1=========1============1================')
+    error = None
+
     if request.method=='POST':
         print('=================2==========2===========2=============2===========')
         email = request.POST.get('email') 
         print(email)
         if not User.objects.filter(email=email).exists():
-            messages.error(request,'Enter a valid Email')  
-            return render(request,'forgotpassword.html')
+            error='This email does not exists for '
+            
         
         if not email:
-            messages.error(request,'Enter a valid Email')  
-            return render(request,'forgotpassword.html')
+            error= 'a valid Email'
+        if error:
+            messages.error(request,error)
+            return redirect('forgot_password')
+            
         otp = otp_generetor()
         expiry_time = timezone.now()+ timedelta(seconds=60)
         OTP.objects.update_or_create(
@@ -336,6 +363,8 @@ def forgot_password(request):
     return render(request,'forgotpassword.html')
 
 def verify_reset_otp(request,email):
+    if  request.user.is_authenticated:
+        return redirect('index')
     alpha = OTP.objects.filter(email=email).first()
     
     if not alpha:
@@ -359,20 +388,36 @@ def verify_reset_otp(request,email):
         return redirect('verify_password',email=email)
         
     return render(request,'otp2.html')
+
+
 def  verify_password(request,email):
+    if  request.user.is_authenticated:
+        return redirect('index')
     error=None
     user = User.objects.filter(email=email).first()
     
     if request.method=='POST':
-        password1=request.POST.get('password1')
-        password2=request.POST.get('password2')
-        if password1!=password2:
-            error = 'passwords does not match'
+        pass1=request.POST.get('password1')
+        pass2=request.POST.get('password2')
+        if len(pass1) < 8:
+            error = 'Password must be at least 8 characters long.'
+        elif not any(char.isupper() for char in pass1):
+            error = 'Password must contain at least one uppercase letter.'
+        elif not any(char.islower() for char in pass1):
+            error = 'Password must contain at least one lowercase letter.'
+        elif not any(char.isdigit() for char in pass1):
+            error = 'Password must contain at least one digit.'
+        elif not any(char in "!@#$%^&*()_" for char in pass1):
+            error = 'Password must contain at least one special character.'
+        elif pass1!=pass2:
+            error = 'your passwords does not match'
+
+        
         if error:
             messages.error(request,error)
             return render(request,'conformpassword.html')
         print('=============44==============44==========================4==========4============4==========4===========')
-        user.set_password(password2)
+        user.set_password(pass2)
         user.save()
         return redirect('login_user')
     return render(request,'conformpassword.html')

@@ -6,15 +6,11 @@ from datetime import datetime
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.core.paginator import Paginator
-
-
-
-
-
-
+from django.contrib.auth.decorators import login_required
 # Create your views here.
 
 
+@login_required(login_url='adminlogin')
 def list_coupons(request):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
@@ -35,6 +31,7 @@ def list_coupons(request):
     }
     return render(request,'admin/coupon_list.html',context)
 
+@login_required(login_url='adminlogin')
 def create_coupons(request):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
@@ -50,6 +47,9 @@ def create_coupons(request):
         if any(not item for item in [code,discount,min_purchase,valid_from,valid_to,limit]):
             error='not field can be empty'
             messages.error(request, error)
+            return redirect('list_coupons')
+        if coupons.objects.filter(code__iexact=code).exists():
+            messages.error(request,'this code already exists')
             return redirect('list_coupons')
         try:
             mininum_purchase = Decimal(min_purchase)
@@ -120,6 +120,7 @@ def create_coupons(request):
         
     return render(request,'admin/coupon_list.html')
 
+@login_required(login_url='adminlogin')
 def edit_coupon(request,id):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
@@ -135,6 +136,9 @@ def edit_coupon(request,id):
         print(code,discount,min_purchase,valid_from,valid_to)
         if not (any(char.isdigit() for char in code) and any(char.isalpha() for char in code)):
             error='code should be mixture of number and alphabets'
+        if coupons.objects.filter(code__iexact=code).exclude(id=coupon.id) .exists():
+            messages.error(request,'this code already exists')
+            return redirect('edit_coupon',id)
         if valid_from or valid_to:
             try:
                 valid_from_date = datetime.strptime(valid_from,"%Y-%m-%d")
@@ -187,6 +191,7 @@ def edit_coupon(request,id):
     }
     return render(request,'admin/coupon_edit.html',context)
 
+@login_required(login_url='login_user')
 def remove_coupon(request):
     if 'applied_coupon' in request.session:
         del request.session['applied_coupon']

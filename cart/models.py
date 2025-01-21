@@ -22,3 +22,11 @@ class Cartitems(models.Model):
     def return_stock(self):
         return  f"self.product.size_variant.stock"
         
+
+
+class DeliveryCharge(models.Model):
+    location = models.CharField(max_length=255)  # Store the city or country
+    charge = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.location}: {self.charge}"

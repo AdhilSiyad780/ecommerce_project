@@ -46,7 +46,7 @@
                   {% csrf_token %}
                   <div class="mb-4">
                       <label for="product_name" class="form-label">Coupon Code</label>
-                      <input type="text" name="code" value="{{ coupon.code }}" class="form-control" id=""  />
+                      <input type="text" name="code" value="{{ coupon.code }}" class="form-control" id="" requiredrequired />
                   </div>
                   <div class="mb-4">
                       <label for="prcategoryoduct_slug" class="form-label">Discount</label>
@@ -54,7 +54,7 @@
                   </div>
                   <div class="mb-4">
                     <label for="prcategoryoduct_slug" class="form-label">Min_purchase</label>
-                    <input type="text" name="MIN-purchase" value="{{ coupon.min_purchase_amount }}" class="form-control" id="" />
+                    <input type="text" name="MIN-purchase" value="{{ coupon.min_purchase_amount }}" class="form-control" id="" required />
                 </div>
                 {% if messages %}
                 <div class="alert alert-danger">
@@ -65,15 +65,15 @@
             {% endif %} 
                 <div class="mb-4">
                   <label for="prcategoryoduct_slug" class="form-label">Valid From</label>
-                  <input type="date" name="validfrom"  value="{{ coupon.valid_from }}"  class="form-control" id="" />
+                  <input type="date" name="validfrom"  value="{{ coupon.valid_from|date:'Y-m-d' }}"  class="form-control" id="" required/>
               </div>
               <div class="mb-4">
                 <label for="prcategoryoduct_slug" class="form-label">Valid To</label>
-                <input type="date" name="validto"  value="{{ coupon.valid_to }}"   class="form-control" id="" />
-            </div>
+                <input type="date" name="validto" value="{{ coupon.valid_to|date:'Y-m-d' }}" class="form-control" required />
+              </div>
             <div class="mb-2">
               <label for="prcategoryoduct_slug" class="form-label"> Limit </label>
-              <input type="text" name="limit"   value="{{ coupon.usage_limit }}"   class="form-control" id="" />
+              <input type="text" name="limit"   value="{{ coupon.usage_limit }}"   class="form-control" id="" required />
           </div>
           {% endif %}
                   <div class="d-grid">

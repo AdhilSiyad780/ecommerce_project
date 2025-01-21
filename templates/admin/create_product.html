@@ -143,23 +143,23 @@ form p {
                                 <!-- Product Details Section -->
                                 <div class="mb-4">
                                     <label for="product_name" class="form-label">Product Name</label>
-                                    <input type="text" placeholder="Type here" name="name" class="form-control" id="product_name" value="{{name}}"/>
+                                    <input type="text" placeholder="Type here" name="name" class="form-control" id="product_name" value="{{name}}" required/>
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label">Product Description</label>
-                                    <input placeholder="Type here" class="form-control" name="description" rows="4"  value="{{description}}"   ></input>
+                                    <input placeholder="Type here" class="form-control" name="description" rows="4"  value="{{description}}"  required >
                                 </div>
                                 <div class="row">
                                     <div class="col-lg-4">
                                         <div class="mb-4">
                                             <label class="form-label">Regular Price</label>
-                                            <input placeholder="$" type="text" name="price" class="form-control"  value="{{price}}" />
+                                            <input placeholder="$" type="text" name="price" class="form-control"  value="{{price}}" required />
                                         </div>
                                     </div>
                                     <div class="col-lg-4">
                                         <div class="mb-4">
                                             <label class="form-label">Offer Price</label>
-                                            <input placeholder="$" type="text" name="offer" class="form-control"value="{{offer}}"  />
+                                            <input placeholder="$" type="text" name="offer" class="form-control"value="{{offer}}"  required />
                                         </div>
                                     </div>
                                     <div class="col-lg-4">
@@ -184,7 +184,7 @@ form p {
                                     <div class="card-body">
                                         <div class="mb-4">
                                             <label for="imageInput1" class="form-label">Upload Image 1</label>
-                                            <input type="file" id="imageInput1" class="form-control" accept="image/*" name="image1"  value="{{image1}}"  />
+                                            <input type="file" id="imageInput1" class="form-control" accept="image/*" name="image1"  value="{{image1}}"  required />
                                             <div id="imagePreview1" style="display:none; margin-top: 10px;">
                                                 <img id="previewImage1" src="" style="max-width: 100%; height: auto;" />
                                             </div>
@@ -199,7 +199,7 @@ form p {
                                     <div class="card-body">
                                         <div class="mb-4">
                                             <label for="imageInput2" class="form-label">Upload Image 2</label>
-                                            <input type="file" id="imageInput2" class="form-control" accept="image/*" name="image2" value="{{image2}}" />
+                                            <input type="file" id="imageInput2" class="form-control" accept="image/*" name="image2" value="{{image2}}" required />
                                             <div id="imagePreview2" style="display:none; margin-top: 10px;">
                                                 <img id="previewImage2" src="" style="max-width: 100%; height: auto;" />
                                             </div>
@@ -214,7 +214,7 @@ form p {
                                     <div class="card-body">
                                         <div class="mb-4">
                                             <label for="imageInput3" class="form-label">Upload Image 3</label>
-                                            <input type="file" id="imageInput3" class="form-control" accept="image/*" name="image3" value="{{image3}}" />
+                                            <input type="file" id="imageInput3" class="form-control" accept="image/*" name="image3" value="{{image3}}" required />
                                             <div id="imagePreview3" style="display:none; margin-top: 10px;">
                                                 <img id="previewImage3" src="" style="max-width: 100%; height: auto;" />
                                             </div>

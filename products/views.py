@@ -7,7 +7,10 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from products.models import Products
 from decimal import Decimal,InvalidOperation
 from django.db.models import Avg
+from django.db.models import Case, When
 from PIL import Image
+from django.contrib.auth.decorators import login_required
+
 
 
 
@@ -27,6 +30,8 @@ def is_valid_image(filename):
         print(filename,'corrupted')
         return False
 
+
+@login_required(login_url='adminlogin')
 def product_list(request):
     # Restrict access to staff or authenticated users
     if not request.user.is_staff or not request.user.is_authenticated:
@@ -55,7 +60,7 @@ def product_list(request):
     })
 
 
-    
+@login_required(login_url='adminlogin')
 def edit_product(request, id):
     if not request.user.is_staff or not request.user.is_authenticated:
         return redirect('adminlogin')
@@ -134,6 +139,7 @@ def edit_product(request, id):
             alpha.price=price
             if image1:
                 alpha.image1=image1
+                print('image one is saved')
             if image2:
                 alpha.image2=image2
             if image3:
@@ -143,7 +149,7 @@ def edit_product(request, id):
 
     return render(request, 'admin/edit_product.html', {'cata': cata, 'item': alpha, 'error': error})
 
-
+@login_required(login_url='adminlogin')
 def create_product(request):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
@@ -218,6 +224,7 @@ def create_product(request):
 
     return render(request,'admin/create_product.html',{'item':alpha})
 
+@login_required(login_url='adminlogin')
 def unlist_product(request,id):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
@@ -236,6 +243,7 @@ def unlist_product(request,id):
     return redirect('product_list') 
 
 #==================================================================================================================================
+@login_required(login_url='adminlogin')
 def list_variant(request,product_id):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
@@ -251,7 +259,7 @@ def list_variant(request,product_id):
 
     return render(request,'admin/list_variant.html',{'variants':variants,'product_id':passid,'item':page_obj })
 
-
+@login_required(login_url='adminlogin')
 def create_variant(request,product_id):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
@@ -289,8 +297,7 @@ def create_variant(request,product_id):
             
     return render(request,'admin/create_variant.html',{'product_id':product_id})
         
-        
-            
+@login_required(login_url='adminlogin') 
 def edit_variant(request,variant):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
@@ -317,7 +324,7 @@ def edit_variant(request,variant):
 
 # =============================================================USER======================================================================
     
-
+@login_required(login_url='login_user')
 def display_products(request):
     alpha = Products.objects.filter(is_active=True,catagory__is_active=True)
     cata = catagory.objects.filter(is_active = True)
@@ -351,14 +358,14 @@ def display_products(request):
     print(search_term,'=====================================================================')
     
     
-    page = request.GET.get('page', 1)  # Get the page number from the URL
-    paginator = Paginator(alpha, 6)  # 12 products per page
+    page = request.GET.get('page', 1) 
+    paginator = Paginator(alpha, 6)  
     try:
-        products = paginator.page(page)  # Get products for the current page
+        products = paginator.page(page) 
     except PageNotAnInteger:
-        products = paginator.page(1)  # If page is not an integer, deliver first page
+        products = paginator.page(1) 
     except EmptyPage:
-        products = paginator.page(paginator.num_pages)  # If page is out of range, deliver last page
+        products = paginator.page(paginator.num_pages)  
 
     return render(request, 'shop.html', {'item': products,
                                           'cata': cata,
@@ -367,8 +374,9 @@ def display_products(request):
                                           
                                           })
 
-from django.db.models import Case, When
 
+
+@login_required(login_url='login_user')
 def product_details(request,id):
     alpha = get_object_or_404(Products,id=id)
     reviews = Review_ration.objects.filter(product=alpha.id).all()

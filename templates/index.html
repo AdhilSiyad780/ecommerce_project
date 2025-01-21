@@ -3,142 +3,127 @@
 
 {% block content %}
 <style>
-  .new__container {
-  position: relative;
+  .categories {
+  padding: 2rem 1rem;
 }
 
-.swiper-wrapper {
-  display: flex;
+.section__title {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1.75rem;
 }
 
-.swiper-slide {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+.section__title span {
+  color: #3a86ff;
 }
 
-.swiper-button-prev,
-.swiper-button-next {
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
-  padding: 0.5rem;
-  border-radius: 50%;
-  width: 2.5rem;
-  height: 2.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
-}
-
-.swiper-button-prev {
-  left: 10px;
-}
-
-.swiper-button-next {
-  right: 10px;
-}
-
-.swiper-pagination {
-  margin-top: 1rem;
-  display: flex;
-  justify-content: center;
-}
-
-.swiper-pagination-bullet {
-  background: #007bff;
-  opacity: 0.8;
-  width: 12px;
-  height: 12px;
-}
-
-.swiper-pagination-bullet-active {
-  background:  hsl(176, 88%, 27%);
-  opacity: 1;
-}
-/* Container layout for categories */
 .categories__container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem; /* Space between items */
-  justify-content: center; /* Centers the content horizontally */
-  margin-top: 2rem; /* Adds space at the top */
+  position: relative;
+  padding: 1rem 0;
 }
 
 .category__item {
-  background-color: #fff; /* White background for each category item */
-  border-radius: 20px; /* Rounded corners */
-  overflow: hidden; /* Ensures the image does not overflow */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover transition */
-  text-align: center; /* Centers text below the image */
-  cursor: pointer; /* Pointer cursor for interactivity */
-  flex: 1 1 calc(25% - 1.5rem); /* 4 items per row, with space between */
-  max-width: calc(25% - 1.5rem); /* Ensures no overflow */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  text-decoration: none;
+  padding: 1rem;
+  transition: transform 0.3s ease;
+  height: 100%;
 }
 
 .category__item:hover {
-  transform: translateY(-5px); /* Slight lift effect on hover */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15); /* Enhanced shadow for hover state */
+  transform: translateY(-5px);
 }
 
 .category__img {
-  width: 100%; /* Ensures the image takes full width of the item */
-  height: 200px; /* Fixed height to ensure uniformity */
-  object-fit: cover; /* Ensures the image covers the area without distortion */
-  border-radius: 20px; /* Rounded corners for images */
-  transition: transform 0.3s ease; /* Smooth zoom-in effect */
-}
-
-.category__item:hover .category__img {
-  transform: scale(1.05); /* Subtle zoom-in effect when hovering over the category item */
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  object-fit: cover;
+  aspect-ratio: 1;
 }
 
 .category__title {
-  font-size: 1.2rem; /* Larger title text for better readability */
-  font-weight: bold; /* Makes the title more prominent */
-  margin-top: 1rem; /* Space between image and title */
-  color: #333; /* Dark text color */
-  transition: color 0.3s ease; /* Smooth color transition on hover */
+  color: #333;
+  font-size: 1.1rem;
+  margin-top: 0.5rem;
 }
 
-.category__item:hover .category__title {
-  color: #007bff; /* Change title color on hover */
+/* Discount tag */
+.category__item div {
+  background-color: #0ea5e9;
+  color: white !important;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  margin: 0.5rem 0;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-  .category__item {
-    flex: 1 1 calc(50% - 1.5rem); /* 2 items per row for tablets */
-  }
+.category__item div p {
+  margin: 0;
+  color: white !important;
+  font-weight: bold;
+}
 
+/* Swiper modifications */
+.swiper-button-prev,
+.swiper-button-next {
+  background-color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.swiper-button-prev::after,
+.swiper-button-next::after {
+  font-size: 1.2rem;
+}
+
+/* Responsive breakpoints */
+@media screen and (max-width: 1024px) {
   .category__img {
-    height: 180px; /* Slightly smaller image size for tablets */
+    max-width: 180px;
   }
-
-  .category__title {
-    font-size: 1rem; /* Adjust title size for smaller screens */
+  
+  .section__title {
+    font-size: 1.5rem;
   }
 }
 
-@media (max-width: 480px) {
-  .category__item {
-    flex: 1 1 100%; /* 1 item per row on mobile */
-  }
-
+@media screen and (max-width: 768px) {
   .category__img {
-    height: 150px; /* Smaller image size for mobile devices */
+    max-width: 150px;
   }
-
+  
   .category__title {
-    font-size: 0.9rem; /* Slightly smaller title on mobile */
+    font-size: 1rem;
+  }
+  
+  .swiper-button-prev,
+  .swiper-button-next {
+    width: 35px;
+    height: 35px;
   }
 }
 
-
+@media screen and (max-width: 480px) {
+  .categories {
+    padding: 1rem 0.5rem;
+  }
+  
+  .category__img {
+    max-width: 120px;
+  }
+  
+  .section__title {
+    font-size: 1.25rem;
+  }
+}
 </style>
     <!--=============== MAIN ===============-->
     <main class="main">
@@ -151,7 +136,7 @@
               Fashion Trending <span>Great Collection</span>
             </h1>
             <p class="home__description">
-              Save more with coupons & up tp 20% off
+              Save more with coupons and have offers
             </p>
             <a href="{% url 'display_products' %}" class="btn">Shop Now</a>
           </div>
@@ -160,36 +145,32 @@
       </section>
 
       <!--=============== CATEGORIES ===============-->
-      <section class="categories container section">
-        <h3 class="section__title"><span>Popular</span> Categories</h3>
-        <div class="categories__container swiper">
-          <div class="swiper-wrapper">
-            {% if item %}
-            {% for val in item %}
-           
-            <a href="" class="category__item swiper-slide">
-              <img
-                src="{{val.image.url}}"
-                alt=""
-                class="category__img"
-              />
-              <div style="align-items: center;">
-                <p style="color:black;">{{ val.offer }}% off</p>
-              </div>
-              <h3 class="category__title">{{val.name }}</h3>
-            </a>
-            {% endfor %}
-            {%  endif %}
-          </div>
+     
+<section class="categories container section">
+  <h3 class="section__title"><span>Popular</span> Categories</h3>
+  <div class="categories__container swiper">
+    <div class="swiper-wrapper">
+      {% if item %}
+        {% for val in item %}
+          <a href="" class="category__item swiper-slide">
+            <img src="{{val.image.url}}" alt="{{val.name}}" class="category__img" />
+            <div>
+              <p>{{ val.offer }}% off</p>
+            </div>
+            <h3 class="category__title">{{val.name }}</h3>
+          </a>
+        {% endfor %}
+      {% endif %}
+    </div>
 
-          <div class="swiper-button-prev">
-            <i class="fi fi-rs-angle-left"></i>
-          </div>
-          <div class="swiper-button-next">
-            <i class="fi fi-rs-angle-right"></i>
-          </div>
-        </div>
-      </section>
+    <div class="swiper-button-prev">
+      <i class="fi fi-rs-angle-left"></i>
+    </div>
+    <div class="swiper-button-next">
+      <i class="fi fi-rs-angle-right"></i>
+    </div>
+  </div>
+</section>
     
 
       <!--=============== PRODUCTS ===============-->
@@ -222,19 +203,7 @@
                     />
                   </a>
                   <div class="product__actions">
-                    <a href="#" class="action__btn" aria-label="Quick View">
-                      <i class="fi fi-rs-eye"></i>
-                    </a>
-                    <a
-                      href="#"
-                      class="action__btn"
-                      aria-label="Add to Wishlist"
-                    >
-                      <i class="fi fi-rs-heart"></i>
-                    </a>
-                    <a href="#" class="action__btn" aria-label="Compare">
-                      <i class="fi fi-rs-shuffle"></i>
-                    </a>
+                  
                   </div>
                 </div>
                 <div class="product__content">
@@ -242,24 +211,12 @@
                   <a href="details.html">
                     <h3 class="product__title">Colorful Pattern Shirts</h3>
                   </a>
-                  <div class="product__rating">
-                    <i class="fi fi-rs-star"></i>
-                    <i class="fi fi-rs-star"></i>
-                    <i class="fi fi-rs-star"></i>
-                    <i class="fi fi-rs-star"></i>
-                    <i class="fi fi-rs-star"></i>
-                  </div>
+               
                   <div class="product__price flex">
                     <span class="new__price">₹{{ val.price}}</span>
+                    </div>
+                   
                   </div>
-                  <a
-                    href="#"
-                    class="action__btn cart__btn"
-                    aria-label="Add To Cart"
-                  >
-                    <i class="fi fi-rs-shopping-bag-add"></i>
-                  </a>
-                </div>
               </div>
               {% endfor %}
               {% endif %}
@@ -269,80 +226,7 @@
       </section>
 
       <!--=============== DEALS ===============-->
-      <section class="deals section">
-        <div class="deals__container container grid">
-          <div class="deals__item">
-            <div class="deals__group">
-              <h3 class="deals__brand">Deals of the Day</h3>
-              <span class="deals__category">Limited quantities</span>
-            </div>
-            <h4 class="deals__title">Summer Collection New Modern Design</h4>
-            <div class="deals__price flex">
-              <span class="new__price">₹139.00</span>
-              <span class="old__price">₹160.99</span>
-            </div>
-            <div class="deals__group">
-              <p class="deals__countdown-text">Hurry Up! Offer Ends In:</p>
-              <div class="countdown">
-                <div class="countdown__amount">
-                  <p class="countdown__period">02</p>
-                  <span class="unit">Days</span>
-                </div>
-                <div class="countdown__amount">
-                  <p class="countdown__period">22</p>
-                  <span class="unit">Hours</span>
-                </div>
-                <div class="countdown__amount">
-                  <p class="countdown__period">57</p>
-                  <span class="unit">Mins</span>
-                </div>
-                <div class="countdown__amount">
-                  <p class="countdown__period">28</p>
-                  <span class="unit">Sec</span>
-                </div>
-              </div>
-            </div>
-            <div class="deals__btn">
-              <a href="details.html" class="btn btn--md">Shop Now</a>
-            </div>
-          </div>
-          <div class="deals__item">
-            <div class="deals__group">
-              <h3 class="deals__brand">Women Clothing</h3>
-              <span class="deals__category">Shirts & Bag</span>
-            </div>
-            <h4 class="deals__title">Try Something new on vacation</h4>
-            <div class="deals__price flex">
-              <span class="new__price">₹178.00</span>
-              <span class="old__price">₹256.99</span>
-            </div>
-            <div class="deals__group">
-              <p class="deals__countdown-text">Hurry Up! Offer Ends In:</p>
-              <div class="countdown">
-                <div class="countdown__amount">
-                  <p class="countdown__period">02</p>
-                  <span class="unit">Days</span>
-                </div>
-                <div class="countdown__amount">
-                  <p class="countdown__period">22</p>
-                  <span class="unit">Hours</span>
-                </div>
-                <div class="countdown__amount">
-                  <p class="countdown__period">57</p>
-                  <span class="unit">Mins</span>
-                </div>
-                <div class="countdown__amount">
-                  <p class="countdown__period">28</p>
-                  <span class="unit">Sec</span>
-                </div>
-              </div>
-            </div>
-            <div class="deals__btn">
-              <a href="details.html" class="btn btn--md">Shop Now</a>
-            </div>
-          </div>
-        </div>
-      </section>
+      
 
      <!--=============== NEW ARRIVALS ===============-->
      <section class="new__arrivals container section">
@@ -377,13 +261,7 @@
               <a href="{% url 'product_details' id=val.id %}">
                 <h3 class="product__title">{{ val.description }}</h3>
               </a>
-              <div class="product__rating">
-                <i class="fi fi-rs-star"></i>
-                <i class="fi fi-rs-star"></i>
-                <i class="fi fi-rs-star"></i>
-                <i class="fi fi-rs-star"></i>
-                <i class="fi fi-rs-star"></i>
-              </div>
+             
               <div class="product__price">
                 <span class="new__price">₹{{ val.price }}</span>
               </div>
@@ -427,8 +305,8 @@
                   </h4>
                 </a>
                 <div class="showcase__price flex">
-                  <span class="new__price">₹238.85</span>
-                  <span class="old__price">₹245.8</span>
+                  <span class="old__price">₹{{val.price}}</span>
+                  <span class="new__price">₹{{val.offer}}</span>
                 </div>
               </div>
             </div>
@@ -466,36 +344,52 @@
         </div>
       </section>
     </main>
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const swiper = new Swiper(".swiper", {
-          slidesPerView: 1,
-          spaceBetween: 20,
-          loop: true,
-          navigation: {
-            nextEl: ".swiper-button-next",
-            prevEl: ".swiper-button-prev",
-          },
-          pagination: {
-            el: ".swiper-pagination",
-            clickable: true,
-          },
-          breakpoints: {
-            640: {
-              slidesPerView: 2,
-              spaceBetween: 20,
-            },
-            768: {
-              slidesPerView: 3,
-              spaceBetween: 30,
-            },
-            1024: {
-              slidesPerView: 4,
-              spaceBetween: 40,
-            },
-          },
-        });
-      });
-    </script>
+    
+<script>
+  // Initialize Swiper
+  new Swiper('.categories__container', {
+    slidesPerView: 1,
+    spaceBetween: 20,
+    navigation: {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev',
+    },
+    breakpoints: {
+      480: {
+        slidesPerView: 2,
+      },
+      768: {
+        slidesPerView: 3,
+      },
+      1024: {
+        slidesPerView: 4,
+      },
+      1200: {
+        slidesPerView: 5,
+      }
+    }
+  });
+  </script>
+  {% if messages %}
+  <script>
+      {% for message in messages %}
+          {% if message.tags == 'error' %}
+              Swal.fire({
+                  icon: 'error',  // Error icon
+                  title: 'Oops...',
+                  text: '{{ message }}',
+                  confirmButtonText: 'OK'
+              });
+          {% elif message.tags == 'success' %}
+              Swal.fire({
+                  icon: 'success',  // Success icon
+                  title: 'Success!',
+                  text: '{{ message }}',
+                  confirmButtonText: 'OK'
+              });
+          {% endif %}
+      {% endfor %}
+  </script>
+  {% endif %}
     
    {% endblock %}

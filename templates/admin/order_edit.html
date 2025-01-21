@@ -78,7 +78,8 @@
                                                 <th width="40%">Product</th>
                                                 <th width="20%">Unit Price</th>
                                                 <th width="20%">Quantity</th>
-                                                <th width="20%" class="text-end">Total</th>
+                                                <th width="20%">Total</th>
+                                                <th width="20%" class="text-end">status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -94,7 +95,14 @@
                                                 </td>
                                                 <td>${{val.price}}</td>
                                                 <td>{{val.quantity}}</td>
-                                                <td class="text-end">${{ val.price }}</td>
+                                                <td >${{ val.price }}</td>
+                                                {%  if val.status == 'requested' %}
+                                               <td> <button> <a href="{% url 'individual_return' id=item.id id2=val.id %}">Approve</a></button></td>
+                                                
+                                                 {% else %}
+                                                <td class="text-end">{{ val.status }}</td>
+                                                {% endif %}
+
                                             </tr>
                                             
                                             {% endfor %}
@@ -102,13 +110,10 @@
                                             <tr>
                                                 <td colspan="4">
                                                     <article class="float-end">
-                                                        <dl class="dlist">
-                                                            <dt>Subtotal:</dt>
-                                                            <dd>${{item.total_price}}</dd>
-                                                        </dl>
+                                                       
                                                         <dl class="dlist">
                                                             <dt>Shipping cost:</dt>
-                                                            <dd>$10.00</dd>
+                                                            <dd>$150.00</dd>
                                                         </dl>
                                                         <dl class="dlist">
                                                             <dt>Grand total:</dt>
@@ -117,7 +122,7 @@
                                                         <dl class="dlist">
                                                             <dt class="text-muted">Status:</dt>
                                                             <dd>
-                                                                <span class="badge rounded-pill alert-success text-success">Payment done</span>
+                                                                <span class="badge rounded-pill alert-success text-success">{{ val.status }}</span>
                                                             </dd>
                                                         </dl>
                                                     </article>
@@ -132,21 +137,28 @@
                             <div class="col-lg-1"></div>
                             <div class="col-lg-4">
                                 <div class="box shadow-sm bg-light">
-                                    <h6 class="mb-15">Payment info</h6>
+                                    <h6 class="mb-15">Order Status</h6>
                                     <p>
-                                        <img src="assets/imgs/card-brands/2.png" class="border" height="20" /> Master Card **** **** 4768 <br />
-                                        Business name: Grand Market LLC <br />
-                                        Phone: +1 (800) 555-154-52
+                                        <strong>Status:</strong> {{item.status}} <br />
+                                        <strong>Order ID:</strong> {{item.id}} <br />
+                                        <strong>Customer:</strong> {{item.user.username}} <br />
+                                        <strong>Order Date:</strong> {{ item.updated_at }}
+
                                     </p>
                                 </div>
                                 <div class="h-25 pt-4">
-                                    <div class="mb-3">
-                                        <label>Notes</label>
-                                        <textarea class="form-control" name="notes" id="notes" placeholder="Type some note"></textarea>
-                                    </div>
-                                    <button class="btn btn-primary">Save note</button>
+                                    {% if item.request == 'requested' %}
+                            
+                                    <form action="{% url 'return_order' id=item.id %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" style="padding: 10px 20px; font-size: 16px; background-color: #FF0000; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                            Approve Order return request
+                                        </button>
+                                    </form>
+                                    {% endif %}
                                 </div>
                             </div>
+                            
                             <!-- col// -->
                         </div>
                     </div>

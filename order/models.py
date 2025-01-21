@@ -14,7 +14,7 @@ class AlOrder(models.Model):
         ('pending', 'pending'),
         ('completed', 'completed'),
         ('canceled', 'canceled'),
-        ('delivered','delivered')
+        ('delivered','delivered'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -28,6 +28,7 @@ class AlOrder(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     reason = models.TextField(max_length=500,null=True,blank=True)
+    request = models.TextField(max_length=500,null=True,blank=True)
 
     def __str__(self):
         return f"Order #{self.id} - {self.user.username}"

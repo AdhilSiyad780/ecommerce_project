@@ -86,6 +86,13 @@
             <h3>Order Details</h3>
             <p>Date: <span class="highlight">{{ order.created_at|date:"F j, Y" }}</span></p>
             <p>Total Amount: <span class="highlight">${{ order.total_price }}</span></p>
+            {%  if order.status == 'canceled' %}
+            <p style="font-size: 16px; margin: 5px 0;">Reason for cancelation: <strong>  {{ order.reason }}</strong></p>
+            {% endif %}
+            {% if order.coupon %}
+            <p style="font-size: 16px; margin: 5px 0;">Applied Coupon: <strong>  {{ order.coupon.code }}</strong></p>
+            {% endif %}
+    
         </div>
 
         <!-- Shipping Address Section -->
@@ -112,7 +119,7 @@
                     <tr>
                         <td>{{ item.product.name }}</td>
                         <td>{{ item.quantity }}</td>
-                        <td>${{ item.price }}</td>
+                        <td>{{ item.price }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

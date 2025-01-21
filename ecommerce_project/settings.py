@@ -45,8 +45,16 @@ SECRET_KEY = 'django-insecure-d1m7w(gff=85=en3jhhx_h6%6&-k@^hwq)e^rf67e2xaxlzs&y
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'c0e4-103-170-228-58.ngrok-free.app',  # Add your ngrok URL here
+]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://c0e4-103-170-228-58.ngrok-free.app', 
+    
+]
 
 # Application definition
 
@@ -106,6 +114,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'wishlist.context_processors.cart_and_wishlist_counts',
                 'cart.context_proccessers.search_context',
+                'django.template.context_processors.request'
 
             ],
         },
@@ -123,6 +132,7 @@ from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
+
 
 DATABASES = {
     'default': {
@@ -211,13 +221,18 @@ AUTHENTICATION_BACKENDS = [
 ]
 SOCIALACCOUNT_PROVIDERS = {
     'google':{
+        'SCOPE':['profile','email'],
+        'AUTH_PURAMS':{'access_type':'online'},
         'APP':{
-            'client_id':'27598069188-44hj7n6r21dfbthj7tqhjaefvqvhv0ko.apps.googleusercontent.com',
-            'secret':'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',
+            'client_id':os.getenv('GOOGLE_CLIENT_ID'),
+            'secret':os.getenv('GOOGLE_SECRET'),
             'key':'',
         }
+
     }
 }
+
+
 LOGIN_URL = 'login'
 LOGOUT_URL = 'logout'
 LOGIN_REDIRECT_URL = 'index'
@@ -228,5 +243,5 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 20485760
 FILE_UPLOAD_MAX_MEMORY_SIZE = 20485760  #10MB 
 
 
-RAZORPAY_KEY_ID = 'rzp_test_fnmwQIIpCOE1SN'
-RAZORPAY_KEY_SECRET = '0C4Xon3ZZaq5V8A1QeRUCJ5d'
+RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET =os.getenv('RAZORPAY_KEY_SECRET')

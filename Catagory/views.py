@@ -3,11 +3,9 @@ from .models import catagory
 from django.shortcuts import get_object_or_404
 from products.views import is_valid_image
 # Create your views here.
+from django.contrib.auth.decorators import login_required
 
-
-
-
-
+@login_required(login_url='adminlogin')
 def catagory_list(request):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
@@ -16,10 +14,11 @@ def catagory_list(request):
 
     return render(request,'admin/catagory_list.html',{'item':item})
 
+@login_required(login_url='adminlogin')
 def create_catagory(request):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
-    item = catagory.objects.all()
+    item = catagory.objects.order_by('-id').all()
     error=None
     try:
         if request.method == "POST":
@@ -35,21 +34,24 @@ def create_catagory(request):
                 error = 'Enter a valid name'
             if name.isdigit():
                 error='Enter a valid  Name'
-            if catagory.objects.filter(name=name).exists():
+            if catagory.objects.filter(name__iexact=name).exists():
                 error = 'catagory with this name already exists'
-                return render(request,'admin/catagory_list.html',{'item':item,'createerror':error})
+                context = {'item':item,'createerror':error,'name':name,'description':description,'image':image,'offer':offer}
+                return render(request,'admin/catagory_list.html',context)
 
             if description.isdigit():
                 error='Enter a valid  discription'
             if description.strip()=='':
                 error = 'Enter a valid description'
-            if catagory.objects.filter(description=description).exists():
+            if catagory.objects.filter(description__iexact=description).exists():
                 error = 'catagory with this description already exists'
-                return render(request,'admin/catagory_list.html',{'item':item,'createerror':error})
+                context = {'item':item,'createerror':error,'name':name,'description':description,'image':image,'offer':offer}
+                return render(request,'admin/catagory_list.html',context)
             
             if not  is_valid_image(image):
                 error = 'incorrect image format'
-                return render(request,'admin/catagory_list.html',{'item':item,'createerror':error})
+                context = {'item':item,'createerror':error,'name':name,'description':description,'image':image,'offer':offer}
+                return render(request,'admin/catagory_list.html',context)
             
 
 
@@ -60,19 +62,22 @@ def create_catagory(request):
             if float(offer)<0:
                 error='offer cannot be less than zero'
             if error:
-                return render(request,'admin/catagory_list.html',{'item':item,'createerror':error})
+                context ={'item':item,'createerror':error,'name':name,'description':description,'image':image,'offer':offer}
+                return render(request,'admin/catagory_list.html',context)
 
             alpha = catagory.objects.create(name=name,description = description,image = image,offer=offer)
             alpha.save()
             return redirect('catagory_list')
     except Exception  as e:
-        error = f'An error occured while creating {e}'
-        return render(request,'admin/catagory_list.html',{'item':item,'createerror':error})
+        error = f'An error occured while creating '
+        context = {'item':item,'createerror':error,'name':name,'description':description,'image':image,'offer':offer}
+        print(f'tThe execption trigered {e}')
+        return render(request,'admin/catagory_list.html',context)
     
     
     return render(request,'admin/catagory_list.html',{'item':item})
     
-
+@login_required(login_url='adminlogin')
 def edit_catagory(request,id):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
@@ -96,7 +101,11 @@ def edit_catagory(request,id):
             elif name.isdigit():
                 error='Enter a valid  Name'
            
-            
+            elif catagory.objects.filter(name__iexact=name).exclude(id=alpha.id) .exists():
+                error = 'name already exists'
+            elif catagory.objects.filter(description__iexact=description).exclude(id=alpha.id).exists():
+                error = 'username already exists'
+                
             elif description.isdigit():
                 error='Enter a valid  discription'
             elif description.strip()=='':
@@ -138,7 +147,7 @@ def edit_catagory(request,id):
     
     return render(request,'admin/edit_catagory.html',{'item':alpha})
     
-  
+@login_required(login_url='adminlogin')
 def unlist_catagory(request,id):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')

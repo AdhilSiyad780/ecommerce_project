@@ -142,11 +142,11 @@ form p {
                                 <!-- Product Details Section -->
                                 <div class="mb-4">
                                     <label for="product_name" class="form-label">Product Name</label>
-                                    <input type="text" placeholder="Type here" name="name" class="form-control"  value="{{item.name}}"  id="product_name" />
+                                    <input type="text" placeholder="Type here" name="name" class="form-control"  value="{{item.name}}"  id="product_name"  />
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label">Product Description</label>
-                                    <input placeholder="Type here" class="form-control" name="description"  value="{{item.description}}"  rows="4"></input>
+                                    <input placeholder="Type here" class="form-control" name="description"  value="{{item.description}}"  rows="4">
                                 </div>
                                 <div class="row">
                                     <div class="col-lg-4">
@@ -183,7 +183,13 @@ form p {
                                     <div class="card-body">
                                         <div class="mb-4">
                                             <label for="imageInput1" class="form-label">Upload Image 1</label>
-                                            <input type="file" id="imageInput1" class="form-control" accept="image/*" name="image1" value="{{ item.image1.url }}" />
+                                            <input type="file" id="imageInput1" class="form-control" accept="image/*" name="image1" value="{{ item.image1.url }}"  />
+                                            {% if item.image3 %}
+                                            <div style="margin-top: 10px;">
+                                            <img src="{{ item.image1.url }}" alt="Image 3" style="max-width: 150px; max-height: 150px; border: 1px solid #ddd; border-radius: 4px;" />
+                                            </div>
+                                            {% endif %}
+
                                             <div id="imagePreview1" style="display:none; margin-top: 10px;">
                                                 <img id="previewImage1" src="" style="max-width: 100%; height: auto;" />
                                             </div>
@@ -198,7 +204,12 @@ form p {
                                     <div class="card-body">
                                         <div class="mb-4">
                                             <label for="imageInput2" class="form-label">Upload Image 2</label>
-                                            <input type="file" id="imageInput2" class="form-control" accept="image/*" name="image2" value="{{ item.image2.url }}" />
+                                            <input type="file" id="imageInput2" class="form-control" accept="image/*" name="image2" value="{{ item.image2.url }}"   />
+                                            {% if item.image3 %}
+                                            <div style="margin-top: 10px;">
+                                            <img src="{{ item.image2.url }}" alt="Image 3" style="max-width: 150px; max-height: 150px; border: 1px solid #ddd; border-radius: 4px;" />
+                                            </div>
+                                            {% endif %}
                                             <div id="imagePreview2" style="display:none; margin-top: 10px;">
                                                 <img id="previewImage2" src="" style="max-width: 100%; height: auto;" />
                                             </div>
@@ -213,7 +224,12 @@ form p {
                                     <div class="card-body">
                                         <div class="mb-4">
                                             <label for="imageInput3" class="form-label">Upload Image 3</label>
-                                            <input type="file" id="imageInput3" class="form-control" accept="image/*" name="image3" value="{{ item.image3.url }}" />
+                                            <input type="file" id="imageInput3" class="form-control" accept="image/*" name="image3" value="{{ item.image3.url }}"    />
+                                            {% if item.image3 %}
+                                            <div style="margin-top: 10px;">
+                                            <img src="{{ item.image3.url }}" alt="Image 3" style="max-width: 150px; max-height: 150px; border: 1px solid #ddd; border-radius: 4px;" />
+                                            </div>
+                                            {% endif %}
                                             <div id="imagePreview3" style="display:none; margin-top: 10px;">
                                                 <img id="previewImage3" src="" style="max-width: 100%; height: auto;" />
                                             </div>

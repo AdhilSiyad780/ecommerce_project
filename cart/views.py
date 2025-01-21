@@ -16,7 +16,12 @@ from .models import Cartitems, Cart
 from django.shortcuts import render, redirect
 from django.db.models import F, Sum
 from django.http import JsonResponse
-from .models import Cart, Cartitems  # Import your models properly
+from .models import Cart, Cartitems  
+from .models import Cart, Cartitems, DeliveryCharge
+from django.contrib.auth.decorators import login_required
+
+
+@login_required(login_url='login_user')
 def cart(request):
     if not request.user.is_authenticated:
         return redirect('login_user')
@@ -29,12 +34,13 @@ def cart(request):
     
     # If no cart exists, set items to an empty list
     if not gama:
+
         items = []
         cart_total = 0  # No cart means no total
     else:
         try:
             # Get the cart items
-            items = Cartitems.objects.filter(cart=gama)
+            items = Cartitems.objects.filter(cart=gama,product__is_active=True,product__catagory__is_active=True)
 
             # Initialize total_items here as well to ensure it's always available
             total_items = []  # It's safe to re-initialize it
@@ -56,8 +62,7 @@ def cart(request):
                                          'carttotal': cart_total,
                                          'shipping': cart_total + 150})
 
-
-
+@login_required(login_url='login_user')
 def addcart(request, id, size=None):
 
     if not request.user.is_authenticated:
@@ -111,7 +116,7 @@ def addcart(request, id, size=None):
     return redirect('product_details', id)
 
 
-
+@login_required(login_url='login_user')
 def update_cart(request, id):
     if not request.user.is_authenticated:
         return redirect('login_user')
@@ -168,7 +173,7 @@ def update_cart(request, id):
 
 def cart_total_cal(request):
     cart = Cart.objects.filter(user=request.user).first()
-    items = Cartitems.objects.filter(cart=cart)
+    items = Cartitems.objects.filter(cart=cart,product__is_active=True,product__catagory__is_active=True)
     cart_total = items.annotate(
     # Calculate the effective price based on product and category offers
     effective_price=Case(
@@ -190,7 +195,7 @@ def cart_total_cal(request):
 
 
 
-
+@login_required(login_url='login_user')
 def deletecart(request,id):
     if not request.user.is_authenticated:
         return redirect('login_user')
@@ -203,18 +208,19 @@ from django.http import JsonResponse
 
 
 
-
+@login_required(login_url='login_user')
 def chectout(request):
     if not request.user.is_authenticated:
         return redirect('login_user')
     
-
+    formdata = request.session.get('form-data',{})
+    
     cart = Cart.objects.filter(user=request.user).first()
     discount=0
     if not cart:
-        messages.error(request,'Ciiscountart is Empty')
+        messages.error(request,'Your Cart is Empty')
         return redirect('cart')
-    cart_items = Cartitems.objects.filter(cart=cart)
+    cart_items = Cartitems.objects.filter(cart=cart,product__is_active=True,product__catagory__is_active=True)
     for item in cart_items:
         stock = item.product.size_variant.filter(size=item.size).first()
         name = item.product.name
@@ -222,7 +228,7 @@ def chectout(request):
             messages.error(request,f'The product {name} does not have this much stock or it is out of stock')
             return redirect('cart')
     # Fetch cart items
-    items = Cartitems.objects.filter(cart=cart.id)
+    items = Cartitems.objects.filter(cart=cart.id,product__is_active=True,product__catagory__is_active=True)
     sub_total = cart_total = items.annotate(
         item_total=F('product__price') * F('quantity')
      ).aggregate(total=Sum('item_total'))['total'] or 0
@@ -261,9 +267,10 @@ def chectout(request):
         print('after discount',cart_total)
         total_discount+=discount
         
-    passcoupon=coupons.objects.filter(usage_limit__gt=0)
+    passcoupon=coupons.objects.filter(usage_limit__gt=0) 
 
     
+
 
     # Context for the template
     context = {
@@ -276,11 +283,9 @@ def chectout(request):
         'sub_total':sub_total,
         'total_discount':total_discount,
         'coupon_discount':discount,
+        'formdata':formdata
     }
 
     return render(request, 'checkout.html', context)
-
-
-
 
 
