@@ -36,6 +36,7 @@ states_in_india = [
     ]
 # Create your views here.
 
+
 @login_required(login_url='login_user')
 def userprofile(request):
     if  not  request.user.is_authenticated:
@@ -217,7 +218,7 @@ def editaddress(request, id):
     alpha = useraddress.objects.filter(user=user)
     # Fetch the specific address to be edited
     address = get_object_or_404(useraddress, id=id, user=user) 
-
+    
     if request.method == 'POST':
         error = ''
         fullname = request.POST.get('fullname')
@@ -236,9 +237,7 @@ def editaddress(request, id):
             error = 'full name should be at least 5 letter'
         if any(char.isdigit() for char in fullname):
             error = 'Name cannot include numbers'
-        if error:
-            messages.error(request,error)
-            return redirect('userprofile')        
+               
 
         if landmark.strip()=='':
             error = 'Enter a Valid landmark'
@@ -256,9 +255,7 @@ def editaddress(request, id):
             error = 'phone number can only contain numbers'
         if   phonenumber.isdigit()==False:
             error = 'Enter a valid phonenumber'
-        if error:
-            messages.error(request,error)
-            return redirect('userprofile')        
+          
         if  len(postalcode)>6:
             error = 'enter a valid postal code'
         if   postalcode.isdigit() == False:
@@ -279,7 +276,7 @@ def editaddress(request, id):
 
             sample = {
                 "error":error,
-                'add':address
+                'val':address
             }
             return render(request,'edit_address.html',sample)
         
@@ -288,6 +285,7 @@ def editaddress(request, id):
         address.fullname = fullname
         address.city = city
         address.state = state            
+        request.session['active_tab']='address'
 
         address.postal_code = postalcode
         address.landmark = landmark
@@ -308,6 +306,7 @@ def delete_address(request,id):
     request.session['active_tab']='address'
 
     return redirect('userprofile') 
+
 
 
 @login_required(login_url='login_user')

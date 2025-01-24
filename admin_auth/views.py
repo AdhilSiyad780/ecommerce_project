@@ -152,17 +152,17 @@ def user_status(request,id):
 
 
 def sales_statistics(request):
-    # Fetch total sales by month
+    
     sales_data = (
         AlOrderItem.objects
-        .annotate(month=ExtractMonth('created_at'))  # Extract month from the order date
-        .values('month')  # Group by month
-        .annotate(total_sales=Sum('price'))  # Sum sales for each month
-        .order_by('month')  # Sort by month
+        .annotate(month=ExtractMonth('created_at')) 
+        .values('month') 
+        .annotate(total_sales=Sum('price')) 
+        .order_by('month')  
     )
 
     # Prepare data for the graph
-    months = [datetime(2025, item['month'], 1).strftime('%B') for item in sales_data]  # Convert month number to name
+    months = [datetime(2025, item['month'], 1).strftime('%B') for item in sales_data]  
     sales = [item['total_sales'] for item in sales_data]
 
     # Pass the data to the template

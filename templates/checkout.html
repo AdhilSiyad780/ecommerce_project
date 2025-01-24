@@ -537,6 +537,16 @@
                 />
                 <label for="" class="payment__label">Razorpay</label>
               </div>
+              <div class="payment__option flex" >
+                <input type="radio" 
+                name = 'radio'
+                id="wallet"
+                class="payment__input"
+                />
+                <label for=""  class="payment__label" >Wallet  <p style="color: green;">Balance : {{balance}}</p> </label>
+
+
+              </div>
             </div>
             <form action="{% url 'placeorder' %}" method="POST">
               {% csrf_token %}

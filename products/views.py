@@ -8,8 +8,9 @@ from products.models import Products
 from decimal import Decimal,InvalidOperation
 from django.db.models import Avg
 from django.db.models import Case, When
-from PIL import Image
 from django.contrib.auth.decorators import login_required
+import base64
+from django.core.files.base import ContentFile
 
 
 
@@ -29,6 +30,68 @@ def is_valid_image(filename):
     except: 
         print(filename,'corrupted')
         return False
+
+import base64
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from PIL import Image
+from io import BytesIO
+import sys
+
+def process_base64_image(base64_string, filename_prefix):
+    """
+    Process base64 encoded image for validation and saving
+    """
+    if not base64_string or base64_string == '':
+        return None
+    
+    try:
+        # Remove data URI prefix if present
+        if base64_string.startswith('data:image'):
+            base64_string = base64_string.split(',')[1]
+        
+        # Decode base64 string
+        image_data = base64.b64decode(base64_string)
+        
+        # Open image with Pillow
+        image = Image.open(BytesIO(image_data))
+        
+        # Verify image
+        image.verify()
+        
+        # Reopen image (verify closes the file)
+        image = Image.open(BytesIO(image_data))
+        
+        # Convert to RGB, handling transparency
+        if image.mode == 'RGBA':
+            background = Image.new('RGB', image.size, (255, 255, 255))
+            background.paste(image, mask=image.split()[3])  # 3 is the alpha channel
+            image = background
+        elif image.mode not in ('RGB'):
+            image = image.convert('RGB')
+        
+        # Prepare image for saving
+        output = BytesIO()
+        image.save(output, format='JPEG', quality=85)
+        output.seek(0)
+        
+        # Create InMemoryUploadedFile
+        cropped_image = InMemoryUploadedFile(
+            output, 
+            None, 
+            f'{filename_prefix}_cropped.jpg', 
+            'image/jpeg',
+            sys.getsizeof(output), 
+            None
+        )
+        
+        return cropped_image
+    
+    except Exception as e:
+        print(f'Image processing failed: {e}')
+        return None
+
+
+
 
 
 @login_required(login_url='adminlogin')
@@ -60,6 +123,7 @@ def product_list(request):
     })
 
 
+
 @login_required(login_url='adminlogin')
 def edit_product(request, id):
     if not request.user.is_staff or not request.user.is_authenticated:
@@ -77,6 +141,16 @@ def edit_product(request, id):
         image1=request.FILES.get('image1')
         image2=request.FILES.get('image2')
         image3=request.FILES.get('image3')
+
+        cropped_image1_data = request.POST.get('croppedImage1')
+        cropped_image2_data = request.POST.get('croppedImage2')
+        cropped_image3_data = request.POST.get('croppedImage3')
+
+        processed_image1 = process_base64_image(cropped_image1_data, f'product_{id}_image1')
+        processed_image2 = process_base64_image(cropped_image2_data, f'product_{id}_image2')
+        processed_image3 = process_base64_image(cropped_image3_data, f'product_{id}_image3')
+        
+        
 
 
 
@@ -115,16 +189,13 @@ def edit_product(request, id):
         except InvalidOperation:
     # If the price or offer cannot be converted to a valid Decimal
             error = 'The price and offer should be valid numbers.'
+        if  is_valid_image(image2) is False:
+            error='invalid format of image'
+        if  is_valid_image(image2) is False:
+            error='invalid format of image'
+        if  is_valid_image(image2) is False:
+            error='invalid format of image'
 
-        if image1:
-            if not  is_valid_image(image1):
-                error='the image is not valid'
-        if image2:
-            if not  is_valid_image(image2):
-                error='the image is not valid'
-        if image3:
-            if not  is_valid_image(image3):
-                error='the image is not valid'
         if error:
             print(error)
             return render(request,'admin/edit_product.html', {'cata': cata, 'item': alpha, 'error': error})
@@ -137,17 +208,18 @@ def edit_product(request, id):
             alpha.description=description
             alpha.offer=offer
             alpha.price=price
-            if image1:
-                alpha.image1=image1
+            if processed_image1:
+                alpha.image1=processed_image1
                 print('image one is saved')
-            if image2:
-                alpha.image2=image2
-            if image3:
-                alpha.image3=image3
+            if processed_image2:
+                alpha.image2=processed_image2
+            if processed_image3:
+                alpha.image3=processed_image3
             alpha.save()
             return redirect('product_list')
 
     return render(request, 'admin/edit_product.html', {'cata': cata, 'item': alpha, 'error': error})
+
 
 @login_required(login_url='adminlogin')
 def create_product(request):
@@ -165,6 +237,17 @@ def create_product(request):
         image3 = request.FILES.get('image3')
         error = ''
         print(name,description,offer,price,catagory_id,image1,image2,image3)
+
+        cropped_image1_data = request.POST.get('croppedImage1')
+        cropped_image2_data = request.POST.get('croppedImage2')
+        cropped_image3_data = request.POST.get('croppedImage3')
+
+        processed_image1 = process_base64_image(cropped_image1_data, f'product_{id}_image1')
+        processed_image2 = process_base64_image(cropped_image2_data, f'product_{id}_image2')
+        processed_image3 = process_base64_image(cropped_image3_data, f'product_{id}_image3')
+        
+        
+        print('prossed finished')
         
         try:
             if not name or not description or not offer or not price or not catagory_id or not image1 or not image2 or not  image2 or not image3:
@@ -189,11 +272,11 @@ def create_product(request):
                 error='the offer should be a valid numbeer'
             if float(price)<float(offer) or float(offer)>float(price) :
                 error='the price should be greater than the offer '
-            if  is_valid_image(image2) is False:
+            if  is_valid_image(processed_image1) is False:
                 error='invalid format of image'
-            if  is_valid_image(image2) is False:
+            if  is_valid_image(processed_image2) is False:
                 error='invalid format of image'
-            if  is_valid_image(image2) is False:
+            if  is_valid_image(processed_image3) is False:
                 error='invalid format of image'
             
             
@@ -207,13 +290,15 @@ def create_product(request):
                     'item':alpha,'error':error
                     
                 }
-                return render(request,'admin/create_product.html',context)     
+                return render(request,'admin/create_product.html',context) 
+            print('no error occured')    
             Catagory = catagory.objects.get(id=catagory_id)
-            product = Products.objects.create(catagory=Catagory,name=name,description=description,price=price,offer=offer,image1=image1,image2=image2,image3=image3)
+            product = Products.objects.create(catagory=Catagory,name=name,description=description,price=price,offer=offer,image1=processed_image1,image2=processed_image2,image3=processed_image3)
             product.save()
             print('product created')
             return redirect('product_list')
         except catagory.DoesNotExist:
+            print('caragory deos not eist')
             return render(request,'admin/create_product.html',{'item':alpha})
 
                

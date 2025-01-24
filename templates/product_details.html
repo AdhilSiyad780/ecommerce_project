@@ -426,15 +426,13 @@
         const stockAmount = document.getElementById('stockAmount');
         
         // Update the stock display based on the stock value
-        if (stock < 5 && stock >        alert("Please select a size before adding to the cart.");
-        0) {
+        if (stock < 5 && stock > 0) {
           stockAmount.textContent = `Only ${stock} left!`;
         } else if (stock >= 5) {
           stockAmount.textContent = 'Available';
         } else {
           stockAmount.textContent = 'Out of stock';
-        }        alert("Please select a size before adding to the cart.");
-
+        }
       });
     </script>
  <script>
@@ -471,14 +469,7 @@
     addToCartButton.addEventListener("click", function (event) {
       if (!sizeDropdown.value) {
         event.preventDefault();
-        Swal.fire({
-          icon:'warning',
-          title:'Size Required',
-          text:'Please select a size',
-          showConfirmButton:false,
-          timer:2000
-
-        })
+        alert("Please select a size before adding to the cart.");
       }
     });
   } else {
@@ -572,14 +563,7 @@
     addToCartButton.addEventListener("click", function (event) {
       if (!sizeDropdown.value) {
         event.preventDefault();
-        Swal.fire({
-          icon:'warning',
-          title:'Size Required',
-          text:'Please select a size',
-          showConfirmButton:false,
-          timer:1000
-
-        })
+        alert("Please select a size before adding to the cart.");
       }
     });
 
@@ -587,14 +571,7 @@
     addToWishlistButton.addEventListener("click", function (event) {
       if (!sizeDropdown.value) {
         event.preventDefault();
-        Swal.fire({
-          icon:'warning',
-          title:'Size Required',
-          text:'Please select a size',
-          showConfirmButton:false,
-          timer:1000
-
-        })
+        alert("Please select a size before adding to the wishlist.");
       }
     });
   } else {

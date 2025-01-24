@@ -104,6 +104,51 @@ def placeorder(request):
                 return redirect('checkout')
         print('realprice',real_price)
         # Razorpay integration for online payment
+        if payment_type == 'wallet':
+            
+            alwallet = wallet.objects.filter(user=request.user).first()
+            if alwallet.balance<(cart_total+150):
+                messages.error(request,'U dont have enough balance to purchasse this order')
+                return redirect('checkout')
+            order = AlOrder.objects.create(
+                user=request.user,
+                address=shipping_address,
+                payment_method='Not completed', 
+                total_price=cart_total+150,
+                real_price=real_price,
+                coupon = coupon_obj,
+                status='completed',
+                created_at=timezone.now(),
+                updated_at=timezone.now()
+            )
+            print(alwallet.balance)
+            altotal = cart_total + 150
+            alwallet.balance-= altotal
+            print(alwallet.balance)
+            alwallet.save()
+            transactions.objects.create(user=order.user,order=order,payment_type='razorpay',amount=order.total_price,
+                                        status='Wallet')
+            if order.coupon:
+                try:
+                    
+                    if order.coupon.usage_limit>0:
+                        order.coupon.usage_limit-=1
+                        order.coupon.save()
+                        del request.session['applied_coupon']
+                    else:
+                        AlOrder.objects.filter(id=order.id).delete()
+                        raise ValueError("Coupon usage limit has been exceeded.")
+                except:
+                    raise ValueError("Coupon usage limit has  exceeded.")
+                
+                    
+            success,error = _finalize_order(request, items, order)
+            if not success:
+                messages.error(request,error)
+                return redirect('checkout')
+
+            return render(request, 'success.html', {'order': order})
+
         if payment_type == 'razorpay':
             order = AlOrder.objects.create(
                 user=request.user,
@@ -230,6 +275,7 @@ def _finalize_order(request, items, order):
 
                     
 
+                
 
                 AlOrderItem.objects.create(
                     order=order,
@@ -522,7 +568,7 @@ def indiviudalcancel(request,id,id2):
 
             size_variant = item.size_variant
             if size_variant:
-                        # Increase the stock by the quantity in the order
+                        
 
                 size_variant.stock += item.quantity
                 size_variant.save()
@@ -691,11 +737,29 @@ def change_order_status(request,id):
     if request.user.is_staff==False or not request.user.is_authenticated:
         return redirect('adminlogin')
     alpha = get_object_or_404(AlOrder,id=id)
+    print('=======================================================')
     if request.method=='POST':
         newstatus = request.POST.get('status')
         if alpha.status == 'pending' or alpha.status=='completed':
-            alpha.status=newstatus
-            alpha.save()
+            try:
+                with transaction.atomic():
+                    for item in alpha.items.all():
+                        sizes= item.size_variant
+                        if sizes:
+                            sizes.stock+=item.quantity
+                            sizes.save()
+                if alpha.status=='completed':
+                    thewallet, created = wallet.objects.get_or_create(user=alpha.user, defaults={'balance': Decimal('0')})
+                    thewallet.balance += alpha.real_price
+                    thewallet.save()
+                    transactions.objects.create(user=alpha.user,order=alpha,payment_type='razorpay',amount=alpha.real_price,
+                                        status='Canceled')
+                alpha.status=newstatus
+                alpha.reason = 'admin changed the order status'
+                alpha.save()
+            except Exception as e:
+                print (f'problem is at order status change {e}')
+
 
     return redirect('admin_order_list')
 
@@ -895,7 +959,6 @@ def retry_razorpay_payment(request,id):
                     'order':order,
                 })
     except Exception as e:
-        AlOrder.objects.filter(id=order.id).delete()
         messages.error(request, f"Error creating Razorpay order: {str(e)}")
         return redirect('orderdetails' ,id=order.id)
     
@@ -906,7 +969,7 @@ def  return_order(request, id):
         return redirect('login_user')
     order = get_object_or_404(AlOrder, id=id)
     print('etheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
-    reason = request.POST.get('reason')
+
     if not order.request:
         order.request = 'requested'
         order.save()

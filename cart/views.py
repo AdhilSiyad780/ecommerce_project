@@ -6,7 +6,7 @@ from django.db.models import F, Case, When, Value, FloatField, Sum
 from userprofile.models import useraddress
 from django.http import JsonResponse
 from django.contrib import messages
-from Coupons.models import coupons
+from Coupons.models import coupons,wallet
 from decimal import Decimal
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -19,6 +19,7 @@ from django.http import JsonResponse
 from .models import Cart, Cartitems  
 from .models import Cart, Cartitems, DeliveryCharge
 from django.contrib.auth.decorators import login_required
+
 
 
 @login_required(login_url='login_user')
@@ -268,6 +269,9 @@ def chectout(request):
         total_discount+=discount
         
     passcoupon=coupons.objects.filter(usage_limit__gt=0) 
+    balance = wallet.objects.filter(user=request.user).first()
+
+
 
     
 
@@ -283,7 +287,8 @@ def chectout(request):
         'sub_total':sub_total,
         'total_discount':total_discount,
         'coupon_discount':discount,
-        'formdata':formdata
+        'formdata':formdata,
+        'balance':balance.balance
     }
 
     return render(request, 'checkout.html', context)
