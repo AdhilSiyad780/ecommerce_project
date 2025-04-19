@@ -13,7 +13,16 @@ from pathlib import Path
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+import dj_database_url
 import os
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
+}
 
 
 
@@ -132,16 +141,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',  # Assuming you are using PostgreSQL
-        'NAME': os.getenv('DATABASE_NAME'),  # Get the database name from .env
-        'USER': os.getenv('DATABASE_USER'),  # Get the database user from .env
-        'PASSWORD': os.getenv('DATABASE_PASSWORD'),  # Get the database password from .env
-        'HOST': os.getenv('DATABASE_HOST'),  # Get the host from .env
-        'PORT': os.getenv('DATABASE_PORT'),  # Get the port from .env
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',  # Assuming you are using PostgreSQL
+#         'NAME': os.getenv('DATABASE_NAME'),  # Get the database name from .env
+#         'USER': os.getenv('DATABASE_USER'),  # Get the database user from .env
+#         'PASSWORD': os.getenv('DATABASE_PASSWORD'),  # Get the database password from .env
+#         'HOST': os.getenv('DATABASE_HOST'),  # Get the host from .env
+#         'PORT': os.getenv('DATABASE_PORT'),  # Get the port from .env
+#     }
+# }
 
 # Django Cloudinary storage for media files
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
